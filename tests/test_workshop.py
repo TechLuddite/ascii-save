@@ -38,6 +38,41 @@ class WorkshopTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertIn(b'no usable text artwork', result.stderr)
 
+    def test_van_gogh_manifest_and_playback(self):
+        source = ROOT / 'examples/van-gogh'
+        manifest = json.loads((source / 'manifest.json').read_text())
+        self.assertEqual(len(manifest['artworks']), 8)
+        self.assertEqual({p.name for p in source.glob('*.txt')},
+                         {a['output'] for a in manifest['artworks']})
+        for art in manifest['artworks']:
+            data = (source / art['output']).read_bytes()
+            self.assertEqual(hashlib.sha256(data).hexdigest(), art['output_sha256'])
+            self.assertTrue(data.decode().endswith(art['caption'] + '\n'))
+            self.assertTrue(art['public_domain'])
+        with prepare(source) as files:
+            self.assertEqual(len(files), 8)
+
+    def test_van_gogh_seeder_rejects_unsafe_sources_before_conversion(self):
+        for kind in ('symlink', 'fifo', 'wrong-hash', 'oversized'):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                source = root / '436535.jpg'
+                if kind == 'symlink':
+                    (root / 'target').write_bytes(b'not a museum JPEG')
+                    source.symlink_to(root / 'target')
+                elif kind == 'fifo':
+                    os.mkfifo(source)
+                elif kind == 'oversized':
+                    with source.open('wb') as handle:
+                        handle.truncate(12_000_001)
+                else:
+                    source.write_bytes(b'not a museum JPEG')
+                output = root / 'output'
+                result = subprocess.run([sys.executable, ROOT / 'scripts/seed-van-gogh.py',
+                                         root, '--output', output], capture_output=True, timeout=5)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse(output.exists())
+
     def test_preview_refuses_nonterminal_without_launching_renderer(self):
         result = subprocess.run([sys.executable, ROOT / 'scripts/preview.py'], capture_output=True)
         self.assertEqual(result.returncode, 2)
