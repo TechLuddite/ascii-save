@@ -1,0 +1,41 @@
+{
+  "title": "Cosmos \u2014 original natural space",
+  "license": "MIT",
+  "width": 208,
+  "height": 56,
+  "author": "ascii-save contributors; created with Codex",
+  "source": "scripts/create-cosmos.py",
+  "generator_sha256": "6f44eb58e12e0fdaa12f8b2a096723d01f48a672093d09342c6a6d85957ef1f0",
+  "artworks": [
+    {
+      "title": "Corona",
+      "output": "01-corona.txt",
+      "seed": 20260913,
+      "output_sha256": "0afd0d3a29e4c85ec34872e97da7948cd2dc032287f4ce5d3ca4a5778b306672"
+    },
+    {
+      "title": "Spiral",
+      "output": "02-spiral.txt",
+      "seed": 20260914,
+      "output_sha256": "1ba0a629643a01a874887ca20cd4cfe9352e745f2ca26c291790fab512650393"
+    },
+    {
+      "title": "Ringed Giant",
+      "output": "03-ringed-giant.txt",
+      "seed": 20260915,
+      "output_sha256": "4e4d6ee5e37fe222c48e2fcdbdb1b6377eff1d6c70d7c0e7b6ad5090537b4012"
+    },
+    {
+      "title": "Pillars",
+      "output": "04-pillars.txt",
+      "seed": 20260916,
+      "output_sha256": "39c414770b298d51f12850055103f7d05335aaab582ff056bbf4f4a0806da1db"
+    },
+    {
+      "title": "Crescent",
+      "output": "05-crescent.txt",
+      "seed": 20260917,
+      "output_sha256": "29ce59e4e297b2b0351f63dc9c507768d48539d1ead3c0cdf0fb014f60187f1d"
+    }
+  ]
+}
