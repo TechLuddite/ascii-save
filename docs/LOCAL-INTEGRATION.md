@@ -1,6 +1,38 @@
-# Native Giants integration
+# Local integration and ownership
 
-The current installer targets Omarchy with Lua Hyprland configuration and the compositor-dispatched stock screensaver launcher. It does not apply the separate upstream draft or edit package files.
+## Active setup: revised native Omarchy draft
+
+The local default now uses the revised [Omarchy draft #11626](https://github.com/omacom/omarchy/pull/11626), last verified at `76d74b355c1750b7e3353d4cadc3e159f6053051`. The user requested this switch to reuse native conversion and playback. The workshop renderer described below has been uninstalled locally; its code remains an optional alternative in this repository.
+
+The trial copies the revised renderer, text preparer, image-folder importer, branding action, and config helper into `~/.local/share/omarchy/screensaver-development/`. A marked user Hyprland PATH block makes the stock launcher resolve the candidate renderer. The user menu overlay explicitly routes branding actions to the candidate. Package files are unchanged. Backups, file hashes, source selection, and removal tooling live under `~/.local/state/omarchy/screensaver-development/`; consult that installation record and `.local/workstation.md` rather than assuming generated import names.
+
+Use **Style → Screensaver → Set Image Folder** for PNG/JPEG/WebP import, or **Set Text Folder** for existing ASCII artwork. The import runs the existing converter once, stores a new text collection under `~/.local/share/omarchy/screensavers/import-*`, and sets `screensaver.source`. Images are ordered numerically within their filenames; text playback follows the generated ordinal names and wraps. Reimport to pick up later image changes. Source images and older imports are retained. SVG remains available through the single-image action.
+
+**Set From Image**, **Edit Text**, and **Restore Default** clear the collection selection after successful conversion/editor launch/reset. Canceled selection or failed conversion preserves it. The local trial's command equivalent is:
+
+```bash
+~/.local/share/omarchy/screensaver-development/bin/omarchy-branding-screensaver images /absolute/image/folder
+```
+
+The installed package's `omarchy branding screensaver` router still dispatches its packaged implementation. The explicit menu overlay and candidate command above are the local integration until upstream support lands. The normal packaged screensaver launcher is reused.
+
+To remove this trial when requested, first inspect the installation record, then use its own removal tool:
+
+```bash
+python3 ~/.local/state/omarchy/screensaver-development/uninstall.py
+```
+
+That local tool checks ownership, preserves unrelated edits and modified files, restores packaged command/menu behavior, and retains artwork and backups. It is workstation tooling, not a file shipped in this repository. `scripts/install.py uninstall` does not remove the trial. Do not stack the trial and workshop PATH overrides. Preserve the selected Giants default and existing idle/lock settings during documentation or repository maintenance.
+
+### Native trial verification
+
+All 18 native-converted Giants played and wrapped independently on two displays (1920×1200 and 1920×1080), using the complete installed `ttfx --random-effect` suite. Both windows reported no idle inhibition. The revised cleanup closed both windows on Escape, reaped effects, removed playback snapshots, restored the cursor, and left a command containing the screensaver class name alive. Menu labels, the directory picker, cancellation, and a short animation recording were inspected locally. Full automatic idle-to-lock verification remains outstanding. No captures are published.
+
+## Alternative: workshop Python renderer
+
+The rest of this document describes `scripts/install.py` and `scripts/native.py`, not the active upstream trial. Its earlier single-display checks must not be confused with the native trial's two-display evidence.
+
+The workshop installer targets Omarchy with Lua Hyprland configuration and the compositor-dispatched stock screensaver launcher. It does not apply the separate upstream draft or edit package files.
 
 Run `python3 scripts/install.py install` from the checkout. To remove it, close any active screensaver and run `python3 scripts/install.py uninstall`. Repeated installation/removal is safe; upgrade by uninstalling first. An edited managed configuration block causes removal to stop and preserve the installation for manual resolution.
 
@@ -23,7 +55,7 @@ Keyboard input, mouse movement after a two-second launch grace period, and confi
 
 Transient status records and sockets live in `$XDG_RUNTIME_DIR/ascii-save` (owner-only directory) and are removed on normal exit. Status includes the zero-based playback sequence, prepared artwork ordinal, count, and terminal dimensions. It contains no artwork content. Stock Omarchy's separate lock command retains its own existing process cleanup behavior.
 
-## Verification on 2026-09-13
+## Earlier workshop verification on 2026-09-13
 
 Automated tests cover every Giants fit, real PTY playback through an entire wrap with a mocked compositor/effects engine, failure survival, input dismissal, unrelated process survival, snapshot cleanup, symlinked config installation, repeated operations, preservation of user edits, and config-validation rollback. The pinned upstream collection regression suite also passes.
 
