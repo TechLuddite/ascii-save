@@ -2,7 +2,7 @@
 
 ## Intended outcome
 
-Bring native ASCII collection playback to the user's Omarchy system and build a comfortable workflow for creating, previewing, and testing ASCII/braille screensavers. This repository seeds that work; it does not activate native integration yet.
+Bring native ASCII collection playback to the user's Omarchy system and build a comfortable workflow for creating, previewing, and testing ASCII/braille screensavers. The repository now includes opt-in native Giants installation; see the Installed Giants screensaver section below. Earlier sections preserve the history of the seed and upstream proposal.
 
 The user liked a live preview of Giants theme portraits converted with `omarchy transcode ascii`, animated by real `ttfx` in a fullscreen Foot terminal. The sepia highlight treatment was especially successful. The preview was a temporary terminal, not a desktop wallpaper. At the user's request, braille conversions of the entire current Giants series are now the default example under `examples/giants/`. The original raster portraits and private visual captures are not included. This explicitly authorized artwork seed does not authorize publishing screenshots or recordings.
 
@@ -67,3 +67,9 @@ Verification on 2026-09-13: all 18 outputs matched a separate regeneration and m
 The local showcase uses nine installed native effects with finished-image holds below two seconds. Its finale fills the viewport with 17 portrait compositions in rows of 4/4/3/3/3, consumes their actual characters in a rotating blackhole, and reveals the centered Omarchy wordmark only at the final explosion. This requires a private adaptation of the original Python TerminalTextEffects blackhole; it is not an unmodified installed ttfx effect or part of the public preview CLI.
 
 Local recording drivers, pinned effect provenance, phase records, and visual evidence remain under ignored `.local/giants-video/` and `artifacts/`. Do not commit or upload them. The start/end layouts were verified against generated frames and visually checked in Foot. The measured viewport is 210×58 cells with current padding; respect it to avoid scrolling or clipping. Recording temporarily enables DND and restores its previous state on exit. These demonstrations do not verify native idle/lock or multi-monitor behavior.
+
+## Installed Giants screensaver
+
+The user authorized persistent local installation and a PR/merge in **TechLuddite/ascii-save**. `scripts/install.py` now installs a standalone copy of `scripts/native.py` and the entire refined Giants set. A marked Lua user-config block explicitly overrides only `omarchy-screensaver` for compositor-launched terminals. No package files or upstream PR were changed. Playback runs all 18 entries in order with wraparound, using unfiltered `ttfx --random-effect` at 120 fps and terminal-aware braille fitting.
+
+See `docs/LOCAL-INTEGRATION.md` for ownership, uninstall, failure behavior, evidence, and remaining live-test limits. Keep screenshots/recordings private. This implementation supersedes the earlier plan to require a whole Omarchy development link.

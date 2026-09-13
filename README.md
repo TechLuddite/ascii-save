@@ -2,7 +2,7 @@
 
 A workshop for making and testing ASCII/braille screensaver collections on Omarchy. Includes a terminal preview, the complete Giants art collection, a Van Gogh collection, original sample art, and agent context for bringing file-or-directory playback to a local system.
 
-**Status:** experimental development seed. It does not install a screensaver, replace a desktop background, or change idle/lock settings. The native integration is proposed in [Omarchy draft PR #11626](https://github.com/omacom/omarchy/pull/11626).
+**Status:** includes an opt-in Giants screensaver installer for Lua-based Omarchy. It uses the existing desktop launcher and idle service. The separate upstream collection proposal remains [Omarchy draft PR #11626](https://github.com/omacom/omarchy/pull/11626).
 
 ## Try it
 
@@ -24,6 +24,23 @@ For a fullscreen temporary terminal on a system with Foot:
 ```bash
 foot --fullscreen --app-id=ascii-save.preview python3 scripts/preview.py
 ```
+
+## Install the Giants screensaver
+
+On Omarchy with Lua Hyprland configuration and `ttfx` installed:
+
+```bash
+python3 scripts/install.py install
+omarchy launch screensaver force
+# Restore the stock renderer:
+python3 scripts/install.py uninstall
+```
+
+Installation copies all 18 refined Giants artworks into a stable user-owned directory. Each session starts at the first portrait, advances after each complete random animation, shows the Omarchy wordmark last, then repeats. `ttfx --random-effect` chooses from the entire installed suite at 120 fps; effects can repeat and their durations vary. Braille artwork scales down to fit the terminal without cropping. Each monitor progresses independently. A key, mouse movement, or focus leaving the screensaver dismisses it.
+
+The installer adds a marked PATH override to `~/.config/hypr/hyprland.lua` for **only** the renderer command. It keeps the packaged launcher, idle service, fonts, branding, and lock timings. It backs up the config and validates Hyprland after applying it. Uninstall removes the exact managed block, preserves unrelated edits and modified installed files, and restores stock command resolution. Uninstall before installing a newer version; close any running screensaver first. The installation survives moving or deleting this checkout, but keep the installer available for removal.
+
+This is an experimental integration, verified with Foot on one display. Real multi-monitor and automatic idle-to-lock testing remain outstanding. See [integration details](docs/LOCAL-INTEGRATION.md). If screensavers were previously disabled, enable them with `omarchy toggle screensaver`; installation does not change that preference.
 
 ## Included collections
 
@@ -61,6 +78,6 @@ python3 -m unittest discover -s tests -v
 bash reference/omarchy/test/shell.d/screensaver-collection-test.sh
 ```
 
-No installation is needed for these tools. Removing the checkout removes the preview tooling. Before adding persistent integration, implement ownership-aware install/uninstall and backup restoration as described in the plan.
+The preview needs no installation. Native playback is opt-in through the installer above; removing the checkout alone does not uninstall it.
 
 Code and original example artwork: MIT. Vendored Omarchy code retains its upstream MIT notice. See [LICENSE](LICENSE) and [reference/omarchy/LICENSE](reference/omarchy/LICENSE).
