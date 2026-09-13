@@ -25,7 +25,9 @@ For a fullscreen temporary terminal on a system with Foot:
 foot --fullscreen --app-id=ascii-save.preview python3 scripts/preview.py
 ```
 
-## Install the Giants screensaver
+## Optional workshop installer
+
+This installer manages the standalone workshop Python renderer. The development workstation now uses the revised native Omarchy draft instead; its menu/import workflow and separate ownership/removal instructions are in [local integration](docs/LOCAL-INTEGRATION.md). Do not use this installer to update that trial or install both overrides together.
 
 On Omarchy with Lua Hyprland configuration and `ttfx` installed:
 

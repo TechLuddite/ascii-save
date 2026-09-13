@@ -1,12 +1,24 @@
 # Handoff
 
+## Current handoff — 2026-09-13
+
+The user asked to reuse Omarchy's existing screensaver capabilities, revise the upstream draft, and leave all 18 Giants enabled as the local default. The active setup now uses user-owned copies of the revised Omarchy scripts. The separate workshop Python renderer was uninstalled. Do not reinstall it as a routine repair or update; see [local integration](LOCAL-INTEGRATION.md) for the distinction and ownership records.
+
+[Omarchy PR #11626](https://github.com/omacom/omarchy/pull/11626) was updated to `76d74b355c1750b7e3353d4cadc3e159f6053051`, titled **Add ASCII collection selection and image-folder import**, and remains open/draft as last checked. It adds native image-folder import and text-folder selection; successful image/text/reset branding actions clear `screensaver.source`. It reuses Omarchy's converter and effects. The config helper preserves symlink targets, and renderer cleanup now targets its own effects and validated screensaver windows. The packaged system-lock command remains unchanged.
+
+The original 18 Giants raster sources were converted with stock `omarchy-transcode-ascii` defaults (braille, maximum 80×26), then selected as a text collection. These differ from the larger, shaded `examples/giants-refined` artworks. Both connected displays completed all 18 entries and wraparound with real random effects. Keyboard dismissal, cursor restoration, snapshot cleanup, unrelated-command survival, menu layout, and directory-picker cancellation were checked live. A full automatic idle-to-lock cycle remains unverified. Captures and exact workstation paths stay private.
+
+The revised upstream focused collection/branding/menu/bar/CLI checks pass. Its full headless run had the same five failing shell files previously reproduced on clean base: `config`, `launch-about`, `locate`, `snapper`, and `unowned-system-paths` (5 of 238 files). Three require the separate `omarchy-pkgs` checkout. Focused tests were rerun after final cleanup changes. No upstream CI checks were listed at final verification; do not claim upstream CI passed.
+
+This section supersedes installation/status claims in the historical notes below. The vendored `reference/` stays pinned to the original draft for reproducibility. It has not been updated to the current upstream implementation.
+
 ## Intended outcome
 
 Bring native ASCII collection playback to the user's Omarchy system and build a comfortable workflow for creating, previewing, and testing ASCII/braille screensavers. The repository now includes opt-in native Giants installation; see the Installed Giants screensaver section below. Earlier sections preserve the history of the seed and upstream proposal.
 
 The user liked a live preview of Giants theme portraits converted with `omarchy transcode ascii`, animated by real `ttfx` in a fullscreen Foot terminal. The sepia highlight treatment was especially successful. The preview was a temporary terminal, not a desktop wallpaper. At the user's request, braille conversions of the entire current Giants series are now the default example under `examples/giants/`. The original raster portraits and private visual captures are not included. This explicitly authorized artwork seed does not authorize publishing screenshots or recordings.
 
-## Upstream work already done
+## Original upstream proposal (historical)
 
 - [Draft PR #11626](https://github.com/omacom/omarchy/pull/11626): Add file and directory sources for ASCII screensavers.
 - Author branch: `TechLuddite/omarchy:ascii-screensaver-collections`.
@@ -68,7 +80,7 @@ The local showcase uses nine installed native effects with finished-image holds 
 
 Local recording drivers, pinned effect provenance, phase records, and visual evidence remain under ignored `.local/giants-video/` and `artifacts/`. Do not commit or upload them. The start/end layouts were verified against generated frames and visually checked in Foot. The measured viewport is 210×58 cells with current padding; respect it to avoid scrolling or clipping. Recording temporarily enables DND and restores its previous state on exit. These demonstrations do not verify native idle/lock or multi-monitor behavior.
 
-## Installed Giants screensaver
+## Workshop renderer installation (historical)
 
 The user authorized persistent local installation and a PR/merge in **TechLuddite/ascii-save**. `scripts/install.py` now installs a standalone copy of `scripts/native.py` and the entire refined Giants set. A marked Lua user-config block explicitly overrides only `omarchy-screensaver` for compositor-launched terminals. No package files or upstream PR were changed. Playback runs all 18 entries in order with wraparound, using unfiltered `ttfx --random-effect` at 120 fps and terminal-aware braille fitting.
 

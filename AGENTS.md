@@ -5,10 +5,18 @@ Read `docs/CONTEXT.md`, `docs/LOCAL-INTEGRATION.md`, and `docs/SECURITY.md` befo
 ## Scope and preferences
 
 - This repo is the user's local ASCII screensaver workshop and implementation handoff. Prioritize running, reviewable changes and clear install/uninstall behavior.
-- The existing upstream draft covers ASCII file/directory sources. Image slideshows and live animated desktop backgrounds are separate work. Do not merge or change the upstream PR as a side effect of work here.
+- The upstream draft covers ASCII file/directory selection, one-time image-folder import through the native converter, branding-menu behavior, and scoped renderer cleanup. Image slideshows and live animated desktop backgrounds are separate work. Do not merge or change the upstream PR as a side effect of work here.
 - Do not upload or attach recordings or screenshots anywhere without explicit user approval. This restriction includes Git commits, PRs, issues, releases, and external hosting. A request to publish source code is not approval to publish visual evidence.
 - Preserve artwork licensing and attribution. Never assume the project's MIT license covers downloaded portraits or their ASCII conversions. Original sample art in `examples/` is MIT.
-- Do not request confirmation for ordinary authorized local development or repeat permissions already granted. Production desktop changes require task context authorizing them; this seed task did not install persistent integration.
+- Do not request confirmation for ordinary authorized local development or repeat permissions already granted. The user authorized the current native Omarchy trial and wants Giants left enabled as the default. Preserve that choice; changing implementations requires task context authorizing the change.
+
+## Current implementation
+
+- The active local setup uses the revised Omarchy draft, not `scripts/native.py`. Read the current-state section of `docs/LOCAL-INTEGRATION.md` and private workstation context before touching installation.
+- `scripts/install.py` manages only the separate workshop renderer. It neither installs nor removes the upstream trial. Do not run it as an update or repair for the current default, or stack both overrides.
+- The revised draft is [Omarchy PR #11626](https://github.com/omacom/omarchy/pull/11626), last verified at `76d74b355c1750b7e3353d4cadc3e159f6053051`. Verify remote state before upstream work. Publishing/merging an ascii-save PR does not authorize merging the Omarchy draft.
+- Prefer native file selection, conversion, effects, menu, launcher, config helpers, and idle services. Image-folder import creates a text snapshot once; it is not a live folder watcher or raster slideshow.
+- `reference/` intentionally preserves the original `fce24d4` proposal. It does not include the newer menu/import/cleanup changes. Do not treat its tests as coverage of the revised draft.
 
 ## Omarchy integration
 
