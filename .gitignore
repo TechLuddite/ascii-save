@@ -1,0 +1,15 @@
+# Local artwork, machine notes and visual evidence are never published by default.
+.local/
+artifacts/
+collections/
+__pycache__/
+*.py[cod]
+.venv/
+*.mp4
+*.webm
+*.mov
+*.gif
+*.png
+*.jpg
+*.jpeg
+*.webp

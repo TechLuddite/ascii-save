@@ -1,0 +1,123 @@
+{
+  "source_repository": "https://github.com/dhh/omarchy-giants-theme",
+  "source_commit": "48d97ac3f9795f039a0e779487a6f2a1342cb870",
+  "format": "braille",
+  "conversion": {
+    "width": 140,
+    "height": 46,
+    "threshold": 55,
+    "trim": false
+  },
+  "artworks": [
+    {
+      "source": "backgrounds/1-turing-von-neumann.jpg",
+      "output": "01-1-turing-von-neumann.txt",
+      "source_sha256": "63aaedaed887094915630f8576e7a7bcf5f3d81c2d69eb0d9cfec987e92d2393",
+      "output_sha256": "87960f0a4dbb540d20818adc491a0120012ebf9ed9e4a02c9a957fd6a199f86e"
+    },
+    {
+      "source": "backgrounds/2-linus-torvalds.jpg",
+      "output": "02-2-linus-torvalds.txt",
+      "source_sha256": "4c0a2fb663eef2c631a121dfd17134c69ff55fb904fb51bbcdf7513e22618213",
+      "output_sha256": "86092cd983ccf7806debb0409ebd6179c595abc457426fbf63cce7ec79727b06"
+    },
+    {
+      "source": "backgrounds/3-ada-lovelace.jpg",
+      "output": "03-3-ada-lovelace.txt",
+      "source_sha256": "82932687b4c00a04b59576ed9303317cb2bf329cb20ab79ac5e784760f762df1",
+      "output_sha256": "872f8418ce72b38c593611889bf75ef7152e9b5f4ef60de712b2b9758b319388"
+    },
+    {
+      "source": "backgrounds/4-grace-hopper.jpg",
+      "output": "04-4-grace-hopper.txt",
+      "source_sha256": "116dd09122042f61bb1314e02625e0770657d57c6a14a03e30e75290bf262cf9",
+      "output_sha256": "f53983e816dbb96c943b34f30f0756c9b674fa6f06ad21a65151a8d05ae038c9"
+    },
+    {
+      "source": "backgrounds/5-donald-knuth.jpg",
+      "output": "05-5-donald-knuth.txt",
+      "source_sha256": "a03805c05adeb305d61b57f61da7cc4587d175fad33f880f92c968924e59a00a",
+      "output_sha256": "fc35e5b87b17579b14896b0b29fe17096f65311c2286dd55d96033e3bd225c4d"
+    },
+    {
+      "source": "backgrounds/6-barbara-liskov.jpg",
+      "output": "06-6-barbara-liskov.txt",
+      "source_sha256": "fba363180351356bec3d174d0b3722477f78a1699dadbb2d2ae26493e66fd676",
+      "output_sha256": "2462fb05b59c605a12dd07327d827d60beffe6c482fc447a915bf1ecef2bc065"
+    },
+    {
+      "source": "backgrounds/7-margaret-hamilton.jpg",
+      "output": "07-7-margaret-hamilton.txt",
+      "source_sha256": "45b20f6827e0b9368f09297475c5e55bdf673b32b69e0d2430e7131145aba5db",
+      "output_sha256": "b38ee00c4e09c9dfdfc1c1a95688ecf99a39a0e04e631e101e7cae5f6a3a7d09"
+    },
+    {
+      "source": "backgrounds/8-dennis-ritchie.jpg",
+      "output": "08-8-dennis-ritchie.txt",
+      "source_sha256": "a37c1ec011bcec1eb1eb8b449fafe559226768eb853fa9ca254096306915e04c",
+      "output_sha256": "e7ec6770e2e21e68c6e240bd51977fcbc969fa023cbcc251e786f3249f847604"
+    },
+    {
+      "source": "backgrounds/9-ken-thompson.jpg",
+      "output": "09-9-ken-thompson.txt",
+      "source_sha256": "8e8cc0ce674e6cfccabee0bb2420a70b237e1bcc722f321e16acdbcdc28b5bf6",
+      "output_sha256": "9aaef96879b516a83fbc00a109225b628c09a8dd083070ac3144c63eb064b548"
+    },
+    {
+      "source": "backgrounds/10-tim-berners-lee.jpg",
+      "output": "10-10-tim-berners-lee.txt",
+      "source_sha256": "43c577ed6b72c3e9652c88aa30cd7fd66668caff66ca747e78140aad9fd4f7b1",
+      "output_sha256": "d83c34a64a2723c2d29a61df1aca4a2e8bc9a25c047e2b4b787341a79f227e02"
+    },
+    {
+      "source": "backgrounds/11-niklaus-wirth.jpg",
+      "output": "11-11-niklaus-wirth.txt",
+      "source_sha256": "808e18e80e9bea38fcad2ab1c376afded2f15798430b48f2be816117592d53c1",
+      "output_sha256": "2f1c2b652c9dedfc71dd7d2eb1723ab256dfe1856f5bf58afc602bdad6e459a4"
+    },
+    {
+      "source": "backgrounds/12-edsger-dijkstra.jpg",
+      "output": "12-12-edsger-dijkstra.txt",
+      "source_sha256": "900196a06dc8a2baaa7bfa51130b0a26288bcfaebc12f27b6cbffb3202fc7c4b",
+      "output_sha256": "d5272c4babef25476018cbca11629890563a47149c5ed4d7ee82ead9284fdb44"
+    },
+    {
+      "source": "backgrounds/13-john-backus.jpg",
+      "output": "13-13-john-backus.txt",
+      "source_sha256": "22993f09b6698f2664e28d1016630f80af0a96270b11f34c07fe9b49d4cdd126",
+      "output_sha256": "fec26eb482cb7f6a3564332a015b40019caba782a3b7d1611349aaba73608b4f"
+    },
+    {
+      "source": "backgrounds/14-tony-hoare.jpg",
+      "output": "14-14-tony-hoare.txt",
+      "source_sha256": "d3521be90fe3cd49d8325c17288b85dac1743f55e194f1339c2a5ad993d64c4e",
+      "output_sha256": "8873673f0f3b5a60bda21958afaacf0e59f16e114faf27c5e5b05a5613663a95"
+    },
+    {
+      "source": "backgrounds/15-adleman-rivest-shamir.jpg",
+      "output": "15-15-adleman-rivest-shamir.txt",
+      "source_sha256": "ed5be02f76caa97ce6c0912c28b51b63da5cdecc049b799f37cbc493251b9555",
+      "output_sha256": "943e3c7073b2938ee93389291c3946c5bf4a199b32e5a951858e6b7758884377"
+    },
+    {
+      "source": "backgrounds/16-alan-kay.jpg",
+      "output": "16-16-alan-kay.txt",
+      "source_sha256": "5315b05aabf132275e9a58a1b6ea61cd47848a88fc6ee6b472fbec44ed4801a0",
+      "output_sha256": "c511d82c9cdad2c3842e22f0ec667cbd8ae67e8dd44ddf20802b8a470b276385"
+    },
+    {
+      "source": "backgrounds/17-bill-joy.jpg",
+      "output": "17-17-bill-joy.txt",
+      "source_sha256": "ffa7cb058e9d8d338edfb78651db90c32b13926fd1e764d8228ae29c39eef9e1",
+      "output_sha256": "4ee8b49c4c97fed4e39f070a8b89d495be6b37263a215a198b8dc267a865cc72"
+    },
+    {
+      "source": "backgrounds/omarchy.png",
+      "output": "18-omarchy.txt",
+      "source_sha256": "e4bc3210e48c371910f5fa593b619543f59fffd0e8e981e5f6d1ea48247d6d4f",
+      "output_sha256": "ea7ccd03be3114ba42611f88a1d1141e5fe6a86b1c0c825c1165bcd65fc18d34"
+    }
+  ],
+  "converter_sha256": "702d81c3207658bf4aac7a0a1a6a750d1b4cc3977296a8d5bfa4a39eb6f5b976",
+  "imagemagick_version": "Version: ImageMagick 7.1.2-31 Q16-HDRI x86_64 8309dc92a:20260903 https://imagemagick.org"
+}

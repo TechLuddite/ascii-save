@@ -1,0 +1,331 @@
+diff --git a/bin/omarchy-screensaver b/bin/omarchy-screensaver
+index acd3868..f6e40d4 100755
+--- a/bin/omarchy-screensaver
++++ b/bin/omarchy-screensaver
+@@ -2,6 +2,27 @@
+ 
+ # omarchy:summary=Run the Omarchy screensaver using random effects from TTE.
+ 
++artworks=("$HOME/.config/omarchy/branding/screensaver.txt")
++playback_directory=""
++
++cleanup_artwork() {
++  [[ -z $playback_directory ]] || rm -rf -- "$playback_directory"
++}
++trap cleanup_artwork EXIT
++trap 'exit 0' SIGINT SIGTERM SIGHUP SIGQUIT
++
++# No setting preserves the existing, live-editable single-file behavior.
++source_path=$(jq -er '.screensaver.source | select(type == "string" and length > 0)' "$HOME/.config/omarchy/shell.json" 2>/dev/null) || source_path=""
++if [[ -n $source_path ]]; then
++  if playback_directory=$(mktemp -d); then
++    if timeout 5s omarchy-screensaver-prepare "$source_path" "$playback_directory"; then
++      artworks=("$playback_directory"/*.txt)
++    fi
++  fi
++fi
++[[ -s ${artworks[0]} ]] || artworks=("$OMARCHY_PATH/logo.txt")
++artwork_index=0
++
+ screensaver_in_focus() {
+   hyprctl activewindow -j | jq -e '.class == "org.omarchy.screensaver"' >/dev/null 2>&1
+ }
+@@ -36,7 +57,7 @@ wait_for_terminal_resize() {
+ wait_for_terminal_resize
+ 
+ while true; do
+-  ttfx -i ~/.config/omarchy/branding/screensaver.txt \
++  ttfx -i "${artworks[artwork_index]}" \
+     --frame-rate 120 --canvas-width 0 --canvas-height 0 --reuse-canvas --anchor-canvas c --anchor-text c\
+     --random-effect --no-eol --no-restore-cursor &
+ 
+@@ -45,4 +66,5 @@ while true; do
+       exit_screensaver
+     fi
+   done
++  artwork_index=$(( (artwork_index + 1) % ${#artworks[@]} ))
+ done
+diff --git a/bin/omarchy-screensaver-prepare b/bin/omarchy-screensaver-prepare
+new file mode 100755
+index 0000000..7097ce3
+--- /dev/null
++++ b/bin/omarchy-screensaver-prepare
+@@ -0,0 +1,96 @@
++#!/bin/bash
++
++# omarchy:summary=Copy a text screensaver source into a private playback directory
++# omarchy:hidden=true
++# omarchy:args=<file-or-directory> <playback-directory>
++
++python3 - "$@" <<'PY'
++import os
++import stat
++import sys
++import unicodedata
++
++MAX_ENTRIES = 4096
++MAX_ARTWORKS = 128
++MAX_BYTES = 65536
++
++
++def read_artwork(path, directory=None):
++  # Open first, then check the same descriptor we read. A swapped symlink is
++  # refused, and a FIFO cannot block between enumeration and validation.
++  if path is None:
++    fd = os.dup(directory)
++  else:
++    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
++  with os.fdopen(fd, "rb") as source:
++    before = os.fstat(source.fileno())
++    if not stat.S_ISREG(before.st_mode) or not 0 < before.st_size <= MAX_BYTES:
++      return None
++    data = source.read(MAX_BYTES + 1)
++    after = os.fstat(source.fileno())
++  if len(data) > MAX_BYTES or (before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (after.st_size, after.st_mtime_ns, after.st_ctime_ns):
++    return None
++  text = data.decode("utf-8").replace("\r\n", "\n")
++  # Artwork is data, not terminal commands (including OSC clipboard sequences).
++  if any(unicodedata.category(char).startswith("C") and char not in "\n\t" for char in text):
++    return None
++  lines = text.splitlines()
++  if not text.strip() or len(lines) > 128 or any(len(line.expandtabs(4)) > 512 for line in lines):
++    return None
++  return text.encode("utf-8")
++
++
++def prepare(source, destination):
++  if source.startswith("~/"):
++    source = os.path.join(os.environ["HOME"], source[2:])
++  if not os.path.isabs(source):
++    raise ValueError("source must be an absolute path or start with ~/")
++
++  # Resolve the explicitly selected root once. Children are opened relative to
++  # its descriptor, never by re-traversing a directory that can be replaced.
++  source = os.path.realpath(source)
++  root = os.open(source, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
++  try:
++    if stat.S_ISDIR(os.fstat(root).st_mode):
++      names = []
++      with os.scandir(root) as entries:
++        for index, entry in enumerate(entries):
++          if index >= MAX_ENTRIES:
++            raise ValueError("collection exceeds 4096 directory entries")
++          if entry.name.lower().endswith(".txt") and not entry.name.startswith("."):
++            names.append(entry.name)
++      candidates = [(name, root) for name in sorted(names, key=os.fsencode)]
++    else:
++      candidates = [(None, root)]
++
++    count = 0
++    for path, directory in candidates:
++      try:
++        data = read_artwork(path, directory)
++      except (OSError, UnicodeError):
++        continue
++      if data is None:
++        continue
++      # The caller owns this freshly created private directory. Fixed names
++      # keep source filenames out of both shell parsing and the renderer.
++      output = os.path.join(destination, f"{count:03d}.txt")
++      fd = os.open(output, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
++      with os.fdopen(fd, "wb") as target:
++        target.write(data)
++      count += 1
++      if count == MAX_ARTWORKS:
++        break
++    if not count:
++      raise ValueError("source contains no usable text artwork")
++  finally:
++    os.close(root)
++
++
++try:
++  if len(sys.argv) != 3:
++    raise ValueError("expected a source and private playback directory")
++  prepare(sys.argv[1], sys.argv[2])
++except (OSError, ValueError) as error:
++  print(f"omarchy-screensaver-prepare: {error}", file=sys.stderr)
++  sys.exit(1)
++PY
+diff --git a/manual/41-branding.md b/manual/41-branding.md
+index cdbe828..f2d0b8e 100644
+--- a/manual/41-branding.md
++++ b/manual/41-branding.md
+@@ -26,6 +26,22 @@ There are three entries in that menu:
+ - **Set From Image** opens a file picker for a png or svg, converts it to ASCII, and shows you the result. Logos with a clear silhouette work far better than photos.
+ - **Restore Default** puts the Omarchy logo back.
+ 
++#### Text collections
++
++To rotate several ASCII or braille artworks, add a `screensaver` block to `~/.config/omarchy/shell.json` alongside `idle`:
++
++```json
++"screensaver": {
++  "source": "~/Pictures/screensaver-art"
++}
++```
++
++The source can be an absolute path or a path starting with `~/`, pointing to either one text file or a directory of `.txt` files. A directory plays in filename order, advancing after each animation finishes and wrapping at the end. Each monitor runs its own animations, so changes are not synchronized between monitors. The existing `idle.screensaver` setting still controls when the screensaver starts.
++
++Collections contain plain UTF-8 text, including braille and block characters. Convert images with `omarchy transcode ascii` first. Files containing terminal escape sequences are skipped, as are empty, invalid, or oversized files. Each file may be at most 64 KiB, 128 lines, and 512 characters per line after tab expansion. Up to 128 artworks are loaded from a directory with at most 4096 entries. Hidden files, nested directories, symbolic-link entries, and special files are not played. The selected source itself may be a symbolic link.
++
++The collection is copied for playback when the screensaver starts; edits appear the next time it opens. Omarchy never modifies the source. An unavailable or unusable source falls back to your existing screensaver logo. Remove `screensaver.source` to return to the live-editable logo and the usual branding menu behavior; the menu continues to edit that fallback logo while a source override is set.
++
+ ### About screen
+ 
+ The same three options are under _Style > About_ for the _About_ screen you get from the Omarchy menu, and they work identically — the file is `~/.config/omarchy/branding/about.txt`, and the About window pops up after each change. The About art is converted to a smaller size than the screensaver's, since it has to fit in a window rather than fill your display.
+diff --git a/test/shell.d/screensaver-collection-test.sh b/test/shell.d/screensaver-collection-test.sh
+new file mode 100644
+index 0000000..5949f33
+--- /dev/null
++++ b/test/shell.d/screensaver-collection-test.sh
+@@ -0,0 +1,149 @@
++#!/bin/bash
++
++set -euo pipefail
++
++source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/base-test.sh"
++
++require_command python3
++
++python3 - "$ROOT" <<'PY'
++import json
++import os
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++
++root = Path(sys.argv[1])
++prepare = root / "bin/omarchy-screensaver-prepare"
++
++
++def check(value, label):
++  if not value:
++    raise AssertionError(label)
++  print("ok - " + label, flush=True)
++
++
++with tempfile.TemporaryDirectory() as temporary:
++  temp = Path(temporary)
++  source = temp / "art collection"
++  source.mkdir()
++  (source / "01.txt").write_text("FIRST\n")
++  (source / "02.txt").write_text("⣿⣿⣿\nSECOND\n")
++
++  def run(path=source, success=True):
++    output = Path(tempfile.mkdtemp(dir=temp))
++    result = subprocess.run([prepare, str(path), str(output)], cwd=temp, capture_output=True, timeout=5)
++    check((result.returncode == 0) == success, "source preparation " + ("succeeds" if success else "refuses unusable input"))
++    return [p.read_text() for p in sorted(output.glob("*.txt"))]
++
++  check(run() == ["FIRST\n", "⣿⣿⣿\nSECOND\n"], "collection preserves text in filename order")
++  check(run(source / "02.txt") == ["⣿⣿⣿\nSECOND\n"], "single-file source preserves braille")
++  selected_link = temp / "selected-link"
++  selected_link.symlink_to(source, target_is_directory=True)
++  check(run(selected_link) == run(), "an explicitly selected directory symlink works")
++
++  (source / "escape.txt").symlink_to(source / "01.txt")
++  (source / "loop.txt").symlink_to(source / "loop.txt")
++  (source / "folder.txt").mkdir()
++  (source / "folder.txt" / "nested.txt").write_text("NESTED")
++  os.mkfifo(source / "pipe.txt")
++  (source / ".hidden.txt").write_text("HIDDEN")
++  (source / "image.png").write_text("IMAGE")
++  (source / "binary.txt").write_bytes(b"\xff\x00")
++  (source / "empty.txt").write_text(" \n\t")
++  (source / "escape-sequence.txt").write_text("\x1b]52;c;SEVMTE8=\x07")
++  (source / "c1.txt").write_text("\u009b31m")
++  (source / "oversize.txt").write_text("X" * 65537)
++  (source / "wide.txt").write_text("X" * 513)
++  (source / "tall.txt").write_text("X\n" * 129)
++  check(run() == ["FIRST\n", "⣿⣿⣿\nSECOND\n"], "links, special files, non-text files, controls and excessive artwork are skipped")
++  run(source / "pipe.txt", success=False)
++
++  marker = temp / "EXECUTED"
++  hostile = source / "03-$(touch EXECUTED) `touch EXECUTED`\n--help.txt"
++  hostile.write_text("LITERAL NAME\n")
++  check(run()[-1] == "LITERAL NAME\n" and not marker.exists(), "shell syntax, newlines and options in filenames remain data")
++  with tempfile.TemporaryDirectory(dir=temp) as snapshot:
++    subprocess.run([prepare, str(source), snapshot], check=True)
++    (source / "01.txt").write_text("CHANGED\n")
++    check((Path(snapshot) / "000.txt").read_text() == "FIRST\n", "playback copy is unaffected by source replacement")
++    check((Path(snapshot) / "000.txt").stat().st_mode & 0o777 == 0o600, "playback files are private")
++
++  empty = temp / "empty"
++  empty.mkdir()
++  run(empty, success=False)
++  run(temp / "missing", success=False)
++  run("relative/path", success=False)
++
++  many = temp / "many"
++  many.mkdir()
++  for index in range(129):
++    (many / f"{index:03d}.txt").write_text(str(index))
++  check(len(run(many)) == 128, "artwork count is bounded")
++  for index in range(4096 - 129 + 1):
++    (many / f"extra-{index}").touch()
++  run(many, success=False)
++
++  # Exercise the real runtime with a fake desktop and renderer. Nothing reaches
++  # the running compositor, the user's branding, or their processes.
++  home = temp / "home"
++  branding = home / ".config/omarchy/branding"
++  branding.mkdir(parents=True)
++  (branding / "screensaver.txt").write_text("DEFAULT\n")
++  config = branding.parent / "shell.json"
++  stubs = temp / "bin"
++  stubs.mkdir()
++  log = temp / "frames"
++  calls = temp / "calls"
++  scratch = temp / "scratch"
++  scratch.mkdir()
++
++  def stub(name, content):
++    file = stubs / name
++    file.write_text("#!/bin/bash\n" + content)
++    file.chmod(0o755)
++
++  stub("hyprctl", '''if [[ $1 == activewindow ]]; then
++  if (( $(wc -l < "$FRAME_LOG") >= 4 )); then
++    printf '%s\\n' '{"class":"other"}'
++  else
++    printf '%s\\n' '{"class":"org.omarchy.screensaver"}'
++  fi
++fi
++''')
++  stub("ttfx", 'printf "%s\\n" "$2" >> "$CALL_LOG"\nhead -n 1 -- "$2" >> "$FRAME_LOG"\n')
++  stub("pgrep", 'sleep 0.1\n(( $(wc -l < "$FRAME_LOG") >= 4 ))\n')
++  stub("pkill", 'exit 0\n')
++  stub("stty", 'echo "60 160"\n')
++  stub("tty", 'echo /dev/pts/99\n')
++  environment = dict(os.environ, HOME=str(home), OMARCHY_PATH=str(root), TMPDIR=str(scratch),
++                     PATH=str(stubs) + ":" + str(root / "bin") + ":" + os.environ["PATH"],
++                     FRAME_LOG=str(log), CALL_LOG=str(calls))
++
++  def play(settings):
++    config.write_text(json.dumps(settings))
++    log.write_text("")
++    calls.write_text("")
++    result = subprocess.run([root / "bin/omarchy-screensaver"], env=environment,
++                            stdin=subprocess.DEVNULL, capture_output=True, timeout=10)
++    check(result.returncode == 0, "screensaver exits on dismissal")
++    check(not list(scratch.iterdir()), "dismissal removes playback copies")
++    return log.read_text().splitlines()
++
++  check(play({}) == ["DEFAULT"] * 4, "absent setting preserves default single-file playback")
++  check(play({"screensaver": {"source": str(source / '01.txt')}}) == ["CHANGED"] * 4, "configured file plays through the runtime")
++  check(play({"screensaver": {"source": str(source)}}) == ["CHANGED", "⣿⣿⣿", "LITERAL NAME", "CHANGED"], "runtime advances and wraps a collection")
++  check(play({"screensaver": {"source": str(empty)}}) == ["DEFAULT"] * 4, "empty collection keeps the screensaver alive with its fallback")
++  check(play({"screensaver": {"source": str(temp / 'missing')}}) == ["DEFAULT"] * 4, "missing source falls back instead of exiting")
++  check(play({"screensaver": {"source": 42}}) == ["DEFAULT"] * 4, "invalid config type retains the default")
++  stub("mktemp", 'exit 1\n')
++  check(play({"screensaver": {"source": str(source)}}) == ["DEFAULT"] * 4, "temporary-directory failure retains playback")
++  (stubs / "mktemp").unlink()
++  stub("timeout", 'exit 124\n')
++  check(play({"screensaver": {"source": str(source)}}) == ["DEFAULT"] * 4, "preparation timeout retains playback and cleans its directory")
++  (stubs / "timeout").unlink()
++  (branding / "screensaver.txt").unlink()
++  play({"screensaver": {"source": str(empty)}})
++  check(set(calls.read_text().splitlines()) == {str(root / 'logo.txt')}, "missing user fallback uses the bundled logo")
++PY
