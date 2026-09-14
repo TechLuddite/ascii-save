@@ -76,6 +76,8 @@ Working tools that are not repository code live under the ignored
 ANSI rasteriser, pty runner, effect survey data). The `/tmp` scratchpad is a
 tmpfs and was lost on a reboot mid-session; keep tooling under `.local/`.
 
+Repository state: this work was committed on branch `color-screensaver` and merged to `main` through a pull request on 2026-09-14 with the user's explicit authorization to push, open and merge. The README credits DHH and the Omarchy team for Omarchy, ttfx and the Giants artwork.
+
 Open items: install `chafa` (needs root) and compare its symbol/dither output
 against `convert-color.py`; a curated Blocktronics ANSI collection with a
 row-count picker; the ASCII art skill on top of the proof renderer; PR changes

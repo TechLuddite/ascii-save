@@ -66,7 +66,7 @@ The original [Cosmos collection](examples/cosmos/README.md) contains five full-s
 
 ## Make a collection
 
-Put local artwork in `collections/<name>/` (ignored by Git). Each `.txt` is one frame of artwork. ASCII, braille, and block characters are supported; ANSI control sequences are not.
+Put local artwork in `collections/<name>/` (ignored by Git). Each `.txt` is one frame of artwork. ASCII, braille, and block characters are supported. Cursor movement and other terminal controls are rejected; SGR colour sequences are accepted only by the colour preparer (`scripts/validate.py --color`).
 
 ```bash
 mkdir -p collections/my-art
@@ -76,6 +76,16 @@ python3 scripts/preview.py collections/my-art
 ```
 
 The converter is an existing Omarchy command. Its availability and visual quality depend on the installed version and source image. Inspect results before using them. Converted images retain their source licensing obligations; this project's MIT license does not license third-party artwork.
+
+## Credits
+
+This project stands on work by DHH and the Omarchy team, and it should be read that way:
+
+- [Omarchy](https://omarchy.org/) itself: the desktop, the idle service, the screensaver launcher, and the `omarchy transcode ascii` converter. The colour renderer and preparer here are small edits of the Omarchy screensaver scripts and keep their MIT notice.
+- [ttfx](https://github.com/omacom-io/ttfx), the Omarchy team's Rust port of TerminalTextEffects. Every animation in this project is theirs; this project only chooses which ones play and passes colour through.
+- The [Giants wallpaper series](https://github.com/dhh/omarchy-giants-theme) by DHH. Every Giants collection here is a conversion of that artwork, with its notices and credits carried alongside. The artwork is not covered by this project's license.
+
+The upstream draft that this workshop feeds is [Omarchy PR #11626](https://github.com/omacom/omarchy/pull/11626).
 
 ## Continue development
 
