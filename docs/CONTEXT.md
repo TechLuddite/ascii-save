@@ -1,12 +1,106 @@
 # Handoff
 
-## Current handoff — 2026-09-13
+## Current handoff — 2026-09-14: colour collection trial
+
+The user judged every monochrome conversion (braille, shaded ASCII busts) as
+not landing, and asked to research "cranking it to the max". The result is a
+colour pipeline, live as the local default. The draft Omarchy PR was **not**
+changed; the user wants more testing first.
+
+Findings that drove the design (all measured on this workstation):
+
+- `ttfx --existing-color-handling always|dynamic` preserves input SGR colour
+  exactly (720 of 720 test colours). The stock renderer runs the default,
+  `ignore`, which strips colour. `dynamic` animates in the effect's palette
+  and settles on the artwork's colours; verified live.
+- Font size is not a useful dial. A full-canvas `expand` takes 6 s at the stock
+  137×36 grid and 189 s at 240×66 (size 10). Stock size 18 is the ceiling.
+- Colour quadrant block elements (2×2 samples per cell, best two-colour
+  partition) beat half blocks and every monochrome treatment. Names painted
+  in the wallpapers stay legible at 127×36 cells.
+- 12 effects paint the finished picture before disturbing it (burn,
+  colorshift, crumble, errorcorrect, highlight, overflow, rings, smoke,
+  spotlights, thunderstorm, unstable, vhstape). The user asked for those to go.
+  Per-character effects run for minutes on a 4.5k-cell colour picture.
+- 16colo.rs serves raw ANSI at `/pack/<pack>/raw/<file>`; a CP437 rasteriser
+  in `.local/crank/tools/ans2txt.py` produces playable colour text. Classic
+  hand-drawn ASCII (Joan Stark archive) is too small and monochrome for this goal.
+
+What exists now in the repository:
+
+- `scripts/convert-color.py`: raster → truecolour quadrant block text, fitted
+  to a cell grid (default 137×36, 14:33 cell aspect), optional edge trim.
+  ImageMagick with restricted limits does decoding; the cell fit is pure Python.
+- `scripts/seed-giants-color.py`: converts all 18 Giants backgrounds from a
+  clean checkout into `examples/giants-color/` with manifest, hashes and notices.
+  Pinned to `TechLuddite/omarchy-giants-theme` at `1bd38f1` (the local checkout;
+  the older `48d97ac` pin used by other collections is not available locally).
+- `scripts/omarchy-screensaver-prepare-color`: the revised upstream preparer
+  with one change: SGR sequences (`ESC [ digits ; m`) pass through, every other
+  control character is still rejected, size limit raised to 1 MiB, line limits
+  applied to the visible text.
+- `scripts/omarchy-screensaver-color`: the revised upstream renderer with
+  `--existing-color-handling dynamic` and an `include_effects` list passed as
+  `--include-effects`. Stock timing, each effect runs to completion. The list
+  is the user's own vote (21 yes, 16 no, recorded in
+  `curation/votes/2026-09-14-giants-ada-lovelace.json`), made with the
+  curation tool below. Earlier the same day an agent-chosen list plus a hold
+  and a 60 s cap were tried and rejected as dull; the user then voted.
+  Do not edit the list by hand; rerun the vote.
+- `curation/`: `curate.py record|serve|apply|list`. Records every effect on a
+  chosen artwork through a pty (asciicast with real timestamps), converts to
+  30 fps cell-diff JSON (`frames.py`, a purpose-built decoder for ttfx output,
+  not a terminal emulator), serves a local canvas player with y/n voting
+  (`serve.py`, `index.html`, 127.0.0.1 only), and writes the yes list into the
+  renderer. Working data lives in `.local/curation/` (ignored). Tests in
+  `tests/test_curation.py` cover the decoder, the server, apply, and that the
+  committed vote record matches the renderer.
+- `scripts/validate.py --color` and `common.prepare(source, COLOR_PREPARER)`.
+- `tests/test_color.py`: converter output shape, SGR-only guarantee, preparer
+  acceptance/rejection cases, pinned preparer still rejecting colour, and the
+  Giants colour manifest. 16 tests pass.
+
+Local state: the user-owned trial copy at
+`~/.local/share/omarchy/screensaver-development/source/bin/` now holds the
+colour renderer and colour preparer; `installed.json` hashes and `source` were
+updated so its uninstall tool still works. Originals are backed up under
+`~/.local/state/omarchy/screensaver-development/color-trial-backup-*/`.
+`shell.json` `screensaver.source` points at
+`~/.local/share/omarchy/screensavers/giants-color`. Verified through the stock
+`omarchy launch screensaver force` on eDP-1: colour renderer in use, effects
+build up from an empty canvas, portraits settle in colour. Idle-to-lock and a
+second display remain unverified.
+
+Working tools that are not repository code live under the ignored
+`.local/crank/` (Pillow venv, headless proof renderer, contact sheet tool,
+ANSI rasteriser, pty runner, effect survey data). The `/tmp` scratchpad is a
+tmpfs and was lost on a reboot mid-session; keep tooling under `.local/`.
+
+Open items: install `chafa` (needs root) and compare its symbol/dither output
+against `convert-color.py`; a curated Blocktronics ANSI collection with a
+row-count picker; the ASCII art skill on top of the proof renderer; PR changes
+only after the user says testing is sufficient.
+
+## Previous handoff — 2026-09-13
+
+Portrait revision after user feedback: the earlier bust treatments were not satisfactory. The fullscreen set now uses a varied ASCII character ramp and source-positive lighting instead of braille shading for the 17 busts. Centered names and the wordmark are byte-for-byte unchanged. All 18 stills were reviewed locally; this is a new visual trial for user judgment, not an approved quality result. The previous collection remains available locally.
+
+Fullscreen improvement pass: the active native trial now selects a stable copy
+of `examples/giants-fullscreen`, replacing the small stock-converted import.
+All 18 Giants remain enabled. Busts are 124×28 cells plus readable centered
+terminal names; the enlarged wordmark is at most 124×11. The generator's
+`--profile native-fullscreen` replaces the wallpaper's bottom caption band.
+All 18 stills were reviewed in fullscreen stock Foot at 1920×1200; short native
+ttfx playback was checked. Eleven workshop tests, reference regressions, hashes,
+and independent regeneration passed. The second display was disconnected and
+idle-to-lock remains unverified. Renderer files and idle settings are unchanged;
+the previous import is retained and the private uninstall record is updated.
 
 The user asked to reuse Omarchy's existing screensaver capabilities, revise the upstream draft, and leave all 18 Giants enabled as the local default. The active setup now uses user-owned copies of the revised Omarchy scripts. The separate workshop Python renderer was uninstalled. Do not reinstall it as a routine repair or update; see [local integration](LOCAL-INTEGRATION.md) for the distinction and ownership records.
 
 [Omarchy PR #11626](https://github.com/omacom/omarchy/pull/11626) was updated to `76d74b355c1750b7e3353d4cadc3e159f6053051`, titled **Add ASCII collection selection and image-folder import**, and remains open/draft as last checked. It adds native image-folder import and text-folder selection; successful image/text/reset branding actions clear `screensaver.source`. It reuses Omarchy's converter and effects. The config helper preserves symlink targets, and renderer cleanup now targets its own effects and validated screensaver windows. The packaged system-lock command remains unchanged.
 
-The original 18 Giants raster sources were converted with stock `omarchy-transcode-ascii` defaults (braille, maximum 80×26), then selected as a text collection. These differ from the larger, shaded `examples/giants-refined` artworks. Both connected displays completed all 18 entries and wraparound with real random effects. Keyboard dismissal, cursor restoration, snapshot cleanup, unrelated-command survival, menu layout, and directory-picker cancellation were checked live. A full automatic idle-to-lock cycle remains unverified. Captures and exact workstation paths stay private.
+Before the fullscreen improvement pass, the original 18 Giants raster sources were converted with stock `omarchy-transcode-ascii` defaults (braille, maximum 80×26), then selected as a text collection. These differ from the larger, shaded `examples/giants-refined` artworks. Both connected displays completed all 18 entries and wraparound with real random effects. Keyboard dismissal, cursor restoration, snapshot cleanup, unrelated-command survival, menu layout, and directory-picker cancellation were checked live. A full automatic idle-to-lock cycle remains unverified. Captures and exact workstation paths stay private.
 
 The revised upstream focused collection/branding/menu/bar/CLI checks pass. Its full headless run had the same five failing shell files previously reproduced on clean base: `config`, `launch-about`, `locate`, `snapper`, and `unowned-system-paths` (5 of 238 files). Three require the separate `omarchy-pkgs` checkout. Focused tests were rerun after final cleanup changes. No upstream CI checks were listed at final verification; do not claim upstream CI passed.
 

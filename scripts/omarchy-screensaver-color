@@ -1,0 +1,113 @@
+#!/bin/bash
+
+# omarchy:summary=Run the Omarchy screensaver using random effects from TTE, keeping artwork colour.
+#
+# Derived from the revised upstream renderer (PR #11626 at 76d74b3) with two
+# changes for colour collections:
+#   1. ttfx runs with --existing-color-handling dynamic, so effects animate in
+#      their own palette and settle on the artwork's own colours.
+#   2. Random selection is limited to include_effects, the list voted on with
+#      curation/curate.py (votes kept under curation/votes/). Each effect
+#      still runs to completion at stock timing. Empty the list to restore the
+#      full ttfx suite.
+# Requires a preparer that passes SGR colour through (see
+# omarchy-screensaver-prepare-color).
+
+artworks=("$HOME/.config/omarchy/branding/screensaver.txt")
+playback_directory=""
+include_effects=(beams binarypath blackhole bouncyballs bubbles burn crumble decrypt fireworks laseretch matrix orbittingvolley pour rain rings spray swarm synthgrid thunderstorm unstable vhstape)
+
+cleanup_artwork() {
+  [[ -z $playback_directory ]] || rm -rf -- "$playback_directory"
+}
+trap cleanup_artwork EXIT
+trap 'exit 0' SIGINT SIGTERM SIGHUP SIGQUIT
+
+# No setting preserves the existing, live-editable single-file behavior.
+source_path=$(jq -er '.screensaver.source | select(type == "string" and length > 0)' "$HOME/.config/omarchy/shell.json" 2>/dev/null) || source_path=""
+if [[ -n $source_path ]]; then
+  if playback_directory=$(mktemp -d); then
+    if timeout 5s omarchy-screensaver-prepare "$source_path" "$playback_directory"; then
+      artworks=("$playback_directory"/*.txt)
+    fi
+  fi
+fi
+[[ -s ${artworks[0]} ]] || artworks=("$OMARCHY_PATH/logo.txt")
+artwork_index=0
+effect_pid=""
+
+screensaver_in_focus() {
+  local window class
+  window=$(hyprctl activewindow -j 2>/dev/null) || return 0
+  class=$(jq -er '.class | select(type == "string" and length > 0)' <<<"$window" 2>/dev/null) || return 0
+  [[ $class == "org.omarchy.screensaver" ]]
+}
+
+exit_screensaver() {
+  trap "" SIGINT SIGTERM SIGHUP SIGQUIT
+  hyprctl eval 'hl.config({ cursor = { invisible = false } })' &>/dev/null || hyprctl keyword cursor:invisible false &>/dev/null || true
+  if [[ -n $effect_pid ]]; then
+    kill "$effect_pid" 2>/dev/null || true
+    for ((attempt = 0; attempt < 20; attempt++)); do
+      kill -0 "$effect_pid" 2>/dev/null || break
+      sleep 0.1
+    done
+    if kill -0 "$effect_pid" 2>/dev/null; then kill -KILL "$effect_pid" 2>/dev/null || true; fi
+    wait "$effect_pid" 2>/dev/null || true
+  fi
+  # Close actual screensaver windows, never processes whose command lines merely
+  # contain the class name. Each window's renderer reaps its own effect child.
+  while IFS= read -r address; do
+    [[ $address =~ ^0x[[:xdigit:]]+$ ]] || continue
+    hyprctl dispatch "hl.dsp.window.close({ window = \"address:$address\" })" >/dev/null 2>&1 ||
+      hyprctl dispatch closewindow "address:$address" >/dev/null 2>&1 || true
+  done < <(hyprctl clients -j 2>/dev/null | jq -r '.[] | select(.class == "org.omarchy.screensaver") | .address')
+  exit 0
+}
+
+# Exit the screensaver on signals and input from keyboard and mouse
+trap exit_screensaver SIGINT SIGTERM SIGHUP SIGQUIT
+
+printf '\033]11;rgb:00/00/00\007'  # Set background color to black
+
+hyprctl eval 'hl.config({ cursor = { invisible = true } })' &>/dev/null || hyprctl keyword cursor:invisible true &>/dev/null
+
+# Terminals allocate the pty at the default 80x24 and only resize it once the
+# compositor has told the window how big it is. ttfx measures the terminal once,
+# at startup, so starting it before the resize lands sizes an 80x24 canvas and
+# paints it into the corner of a fullscreen window.
+wait_for_terminal_resize() {
+  local deadline=$((SECONDS + 2))
+  while ((SECONDS < deadline)) && [[ $(stty size 2>/dev/null) == "24 80" ]]; do
+    sleep 0.02
+  done
+}
+
+wait_for_terminal_resize
+
+effect_filter=()
+if ((${#include_effects[@]})); then
+  effect_filter=(--include-effects "${include_effects[@]}")
+fi
+
+while true; do
+  ttfx -i "${artworks[artwork_index]}" \
+    --existing-color-handling dynamic \
+    --frame-rate 120 --canvas-width 0 --canvas-height 0 --reuse-canvas --anchor-canvas c --anchor-text c\
+    --random-effect "${effect_filter[@]}" --no-eol --no-restore-cursor &
+
+  effect_pid=$!
+
+  while kill -0 "$effect_pid" 2>/dev/null; do
+    if read -n1 -t 1 || ! screensaver_in_focus; then
+      exit_screensaver
+    fi
+  done
+  if ! wait "$effect_pid"; then
+    # A broken effect must neither busy-loop nor close the idle window.
+    read -n1 -t 1 && exit_screensaver
+  fi
+  effect_pid=""
+  screensaver_in_focus || exit_screensaver
+  artwork_index=$(( (artwork_index + 1) % ${#artworks[@]} ))
+done
