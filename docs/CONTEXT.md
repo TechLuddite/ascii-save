@@ -78,6 +78,10 @@ tmpfs and was lost on a reboot mid-session; keep tooling under `.local/`.
 
 Repository state: this work was committed on branch `color-screensaver` and merged to `main` through a pull request on 2026-09-14 with the user's explicit authorization to push, open and merge. The README credits DHH and the Omarchy team for Omarchy, ttfx and the Giants artwork.
 
+Video pipelines (2026-09-14) are in the repository under `video/` (opener, showcase, blackhole override, renderer, tests in `tests/test_video.py`), superseding the private `.local/giants-video/color/` prototypes. The opener renders a 26 s sequence offscreen: accelerating full-screen colour slides, the last portrait shrinks into a 4/4/3/3/3 grid, tiles pop in, the adapted TTE blackhole (vendored 0.15.0, colour kept) consumes the grid and explodes into the stock `logo.txt` doubled to 162×20 cells. Canvas 210×58 at 9×20 px. The showcase follows it with one curated effect per portrait (17 of the 21 yes votes, the four slowest left out), effects over 5 s time-compressed to about 4 to 5 s with a 1.5 s hold; 116.8 s total. Outputs `artifacts/giants-opener-color.mp4`, `artifacts/giants-showcase-color.mp4` and copies in `~/Videos`; evidence stays local. The earlier monochrome finale in `.local/giants-video/` is superseded but retained.
+
+The user has asked for a code-burden and code-security review of the colour work before the Omarchy draft PR is touched. That review has not been done yet; treat every PR-facing change as blocked until it is.
+
 Open items: install `chafa` (needs root) and compare its symbol/dither output
 against `convert-color.py`; a curated Blocktronics ANSI collection with a
 row-count picker; the ASCII art skill on top of the proof renderer; PR changes
