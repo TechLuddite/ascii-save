@@ -1,6 +1,51 @@
 # Local integration and ownership
 
-## Active setup: revised native Omarchy draft
+## Active setup: colour Giants on the revised native draft (2026-09-14)
+
+The trial copy described in the next section is still the active mechanism,
+with two of its files replaced by colour-aware versions from this repository:
+
+| Trial file | Now a copy of | Change |
+| --- | --- | --- |
+| `source/bin/omarchy-screensaver` | `scripts/omarchy-screensaver-color` | `ttfx --existing-color-handling dynamic`; random selection limited to the voted `include_effects` list; stock timing |
+| `source/bin/omarchy-screensaver-prepare` | `scripts/omarchy-screensaver-prepare-color` | SGR colour passes validation; all other controls still rejected; 1 MiB limit |
+
+`~/.config/omarchy/shell.json` `screensaver.source` is
+`~/.local/share/omarchy/screensavers/giants-color`, a copy of
+`examples/giants-color`. The trial's `installed.json` records the new hashes,
+the new source, and the previous source
+(`.../screensavers/giants-fullscreen-ascii`) under `color_trial`, so
+`uninstall.py` still recognises and removes its files. The replaced originals
+and the prior `shell.json` are under
+`~/.local/state/omarchy/screensaver-development/color-trial-backup-<stamp>/`.
+
+To go back to the monochrome trial without uninstalling: copy the two backed-up
+files over `source/bin/`, restore their hashes in `installed.json` from the
+backed-up copy of that record, and set `screensaver.source` back to the
+previous source. Do not run `scripts/install.py`.
+
+Verified on 2026-09-14 through the stock `omarchy launch screensaver force` on
+eDP-1 at 1920×1200: the launcher resolved the colour renderer, `ttfx` ran with
+`--existing-color-handling dynamic` and the include list, the first artwork
+built up from an empty canvas, and the second settled in full colour. Escape
+dismissal and cleanup were verified for the same renderer body earlier. Not yet
+verified: automatic idle-to-lock, a second display, and every included effect
+in the live window.
+
+## Previous setup: revised native Omarchy draft
+
+Portrait revision after user feedback: the earlier bust treatments were not satisfactory. The fullscreen set now uses a varied ASCII character ramp and source-positive lighting instead of braille shading for the 17 busts. Centered names and the wordmark are byte-for-byte unchanged. All 18 stills were reviewed locally; this is a new visual trial for user judgment, not an approved quality result. The previous collection remains available locally.
+
+Fullscreen improvement pass: the active native trial now selects a stable copy
+of `examples/giants-fullscreen`, replacing the small stock-converted import.
+All 18 Giants remain enabled. Busts are 124×28 cells plus readable centered
+terminal names; the enlarged wordmark is at most 124×11. The generator's
+`--profile native-fullscreen` replaces the wallpaper's bottom caption band.
+All 18 stills were reviewed in fullscreen stock Foot at 1920×1200; short native
+ttfx playback was checked. Eleven workshop tests, reference regressions, hashes,
+and independent regeneration passed. The second display was disconnected and
+idle-to-lock remains unverified. Renderer files and idle settings are unchanged;
+the previous import is retained and the private uninstall record is updated.
 
 The local default now uses the revised [Omarchy draft #11626](https://github.com/omacom/omarchy/pull/11626), last verified at `76d74b355c1750b7e3353d4cadc3e159f6053051`. The user requested this switch to reuse native conversion and playback. The workshop renderer described below has been uninstalled locally; its code remains an optional alternative in this repository.
 

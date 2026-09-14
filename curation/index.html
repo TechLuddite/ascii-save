@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Effect Curation</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #0b0b0b; color: #ddd; font: 14px system-ui, sans-serif; display: grid; grid-template-columns: 250px 1fr; height: 100vh; }
+  aside { border-right: 1px solid #222; overflow: auto; padding: 8px 0; }
+  aside h1 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #888; margin: 4px 12px 8px; }
+  aside .tally { margin: 0 12px 10px; font-size: 12px; color: #999; }
+  aside button.item { display: flex; width: 100%; text-align: left; background: none; border: 0; color: #ccc; padding: 6px 12px; font: inherit; cursor: pointer; gap: 8px; align-items: center; }
+  aside button.item:hover { background: #161616; }
+  aside button.item.current { background: #1e1e1e; color: #fff; }
+  .mark { width: 16px; display: inline-block; text-align: center; font-weight: 700; }
+  .mark.y { color: #7bd88f; } .mark.n { color: #e06c75; } .mark.none { color: #444; }
+  main { display: flex; flex-direction: column; min-width: 0; }
+  header { display: flex; gap: 14px; align-items: center; padding: 10px 16px; border-bottom: 1px solid #222; flex-wrap: wrap; }
+  header .name { font-size: 20px; font-weight: 600; min-width: 180px; }
+  header .info { color: #999; font-size: 12px; }
+  button.ctl { background: #1c1c1c; color: #ddd; border: 1px solid #333; border-radius: 6px; padding: 6px 12px; font: inherit; cursor: pointer; }
+  button.ctl:hover { background: #262626; }
+  button.vote { font-weight: 700; padding: 8px 18px; }
+  button.vote.y { border-color: #3d7a4a; color: #7bd88f; } button.vote.n { border-color: #7a3d44; color: #e06c75; }
+  button.vote.active.y { background: #3d7a4a; color: #fff; } button.vote.active.n { background: #7a3d44; color: #fff; }
+  #stage { flex: 1; display: grid; place-items: center; background: #000; overflow: hidden; }
+  canvas { image-rendering: auto; }
+  footer { padding: 6px 16px; border-top: 1px solid #222; color: #777; font-size: 12px; display: flex; gap: 18px; align-items: center; }
+  progress { width: 220px; height: 8px; }
+  .warn { color: #e5c07b; }
+</style>
+</head>
+<body>
+<aside>
+  <h1>Effects</h1>
+  <div class="tally" id="tally"></div>
+  <div id="list"></div>
+</aside>
+<main>
+  <header>
+    <span class="name" id="name">…</span>
+    <button class="ctl" id="prev" title="k / ←">◀ prev</button>
+    <button class="ctl" id="replay" title="r">↻ replay</button>
+    <button class="ctl" id="pause" title="space">⏸ pause</button>
+    <button class="ctl" id="next" title="j / →">next ▶</button>
+    <label class="info">speed <select id="speed"><option>0.5</option><option selected>1</option><option>2</option><option>4</option></select>×</label>
+    <span style="flex:1"></span>
+    <button class="ctl vote y" id="yes" title="y">YES</button>
+    <button class="ctl vote n" id="no" title="n">NO</button>
+    <button class="ctl" id="clear" title="u">unvote</button>
+  </header>
+  <div id="stage"><canvas id="cv"></canvas></div>
+  <footer>
+    <span id="meta"></span>
+    <progress id="prog" value="0" max="1"></progress>
+    <span id="clock"></span>
+    <span>keys: y / n vote, j k or arrows move, space pause, r replay, u unvote. Voting auto-advances.</span>
+  </footer>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const cv = $('cv'), ctx = cv.getContext('2d');
+let effects = [], index = 0, clip = null, playing = false, raf = null, pos = 0, t0 = 0, elapsed = 0, loadSeq = 0;
+let COLS = 137, ROWS = 36, cw = 14, ch = 33, fontPx = 24;
+const QUAD = { '▘': [[0,0,.5,.5]], '▝': [[.5,0,.5,.5]], '▀': [[0,0,1,.5]], '▖': [[0,.5,.5,.5]], '▌': [[0,0,.5,1]],
+  '▞': [[.5,0,.5,.5],[0,.5,.5,.5]], '▛': [[0,0,1,.5],[0,.5,.5,.5]], '▗': [[.5,.5,.5,.5]], '▚': [[0,0,.5,.5],[.5,.5,.5,.5]],
+  '▐': [[.5,0,.5,1]], '▜': [[0,0,1,.5],[.5,.5,.5,.5]], '▄': [[0,.5,1,.5]], '▙': [[0,0,.5,1],[.5,.5,.5,.5]], '▟': [[.5,0,.5,.5],[0,.5,1,.5]], '█': [[0,0,1,1]],
+  '▁': [[0,.875,1,.125]], '▂': [[0,.75,1,.25]], '▃': [[0,.625,1,.375]], '▅': [[0,.375,1,.625]], '▆': [[0,.25,1,.75]], '▇': [[0,.125,1,.875]],
+  '▏': [[0,0,.125,1]], '▎': [[0,0,.25,1]], '▍': [[0,0,.375,1]], '▋': [[0,0,.625,1]], '▊': [[0,0,.75,1]], '▉': [[0,0,.875,1]] };
+const SHADE = { '░': .25, '▒': .5, '▓': .75 };
+function layout() {
+  const stage = $('stage'); const W = stage.clientWidth, H = stage.clientHeight;
+  const scale = Math.min(W / (COLS * 14), H / (ROWS * 33));
+  cw = 14 * scale; ch = 33 * scale; fontPx = Math.floor(24 * scale);
+  cv.width = Math.floor(COLS * cw); cv.height = Math.floor(ROWS * ch);
+  ctx.font = `${fontPx}px "JetBrainsMono Nerd Font", "JetBrains Mono", monospace`; ctx.textBaseline = 'middle';
+  if (clip) redrawAll();
+}
+window.addEventListener('resize', layout);
+let grid = null;
+function clearGrid() { grid = new Array(COLS * ROWS).fill(null); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cv.width, cv.height); }
+function mix(a, b, f) { const p = h => [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)]; const A = p(a), B = p(b); return `rgb(${A.map((v,i)=>Math.round(B[i]+(v-B[i])*f)).join(',')})`; }
+function drawCell(x, y, chr, fg, bg) {
+  const X = x * cw, Y = y * ch;
+  ctx.fillStyle = '#' + bg; ctx.fillRect(X, Y, cw + 0.5, ch + 0.5);
+  if (chr === ' ' || chr === '') return;
+  if (QUAD[chr]) { ctx.fillStyle = '#' + fg; for (const [rx, ry, rw, rh] of QUAD[chr]) ctx.fillRect(X + rx * cw, Y + ry * ch, rw * cw + 0.5, rh * ch + 0.5); return; }
+  if (SHADE[chr]) { ctx.fillStyle = mix(fg, bg, SHADE[chr]); ctx.fillRect(X, Y, cw + 0.5, ch + 0.5); return; }
+  ctx.fillStyle = '#' + fg; ctx.fillText(chr, X, Y + ch / 2);
+}
+function applyFrame(cells) {
+  for (let i = 0; i < cells.length; i += 4) {
+    const x = cells[i], y = cells[i+1], chr = cells[i+2], [fg, bg] = clip.palette[cells[i+3]];
+    grid[y * COLS + x] = [chr, fg, bg]; drawCell(x, y, chr, fg, bg);
+  }
+}
+function redrawAll() { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cv.width, cv.height); for (let i = 0; i < grid.length; i++) { const c = grid[i]; if (c) drawCell(i % COLS, Math.floor(i / COLS), c[0], c[1], c[2]); } }
+async function loadList() { effects = await (await fetch('/effects.json')).json(); renderList(); }
+function renderList() {
+  const list = $('list'); list.innerHTML = ''; let y = 0, n = 0;
+  effects.forEach((e, i) => {
+    if (e.vote === 'y') y++; if (e.vote === 'n') n++;
+    const b = document.createElement('button'); b.className = 'item' + (i === index ? ' current' : '');
+    const cls = e.vote === 'y' ? 'y' : e.vote === 'n' ? 'n' : 'none';
+    b.innerHTML = `<span class="mark ${cls}">${e.vote === 'y' ? '✓' : e.vote === 'n' ? '✗' : '·'}</span><span>${e.effect}</span>`;
+    b.onclick = () => select(i); list.appendChild(b);
+  });
+  $('tally').textContent = `${y} yes · ${n} no · ${effects.length - y - n} undecided of ${effects.length}`;
+}
+async function select(i) {
+  if (!effects.length) return;
+  index = (i + effects.length) % effects.length; renderList();
+  const e = effects[index]; $('name').textContent = e.effect; updateVoteButtons();
+  const seq = ++loadSeq; stop(); $('clock').textContent = 'loading…'; $('meta').textContent = '';
+  const data = await (await fetch('/frames/' + e.effect + '.json')).json();
+  if (seq !== loadSeq) return;
+  clip = data; COLS = clip.cols; ROWS = clip.rows; layout();
+  $('meta').innerHTML = `${clip.seconds} s` + (clip.capped ? ' <span class="warn">(clip capped at 120 s, the real effect runs longer)</span>' : '') + ((e.survey || {}).reveals_first ? ' · shows the full picture first' : '');
+  play(0);
+}
+function play(from) { stop(); clearGrid(); pos = 0; elapsed = from; t0 = performance.now(); playing = true; $('pause').textContent = '⏸ pause'; tick(); }
+function stop() { playing = false; if (raf) { cancelAnimationFrame(raf); raf = null; } }
+function tick() {
+  if (!playing || !clip) return;
+  const speed = parseFloat($('speed').value);
+  const now = elapsed + (performance.now() - t0) / 1000 * speed;
+  const fr = clip.frames;
+  while (pos < fr.length && fr[pos][0] <= now) applyFrame(fr[pos++][1]);
+  const total = fr.length ? fr[fr.length - 1][0] : 1;
+  $('prog').value = Math.min(now / total, 1); $('clock').textContent = `${Math.min(now, total).toFixed(1)} / ${total.toFixed(1)} s`;
+  if (pos >= fr.length) { playing = false; $('pause').textContent = '▶ play'; return; }
+  raf = requestAnimationFrame(tick);
+}
+function togglePause() {
+  if (!clip) return;
+  if (playing) { elapsed += (performance.now() - t0) / 1000 * parseFloat($('speed').value); stop(); $('pause').textContent = '▶ play'; }
+  else if (pos >= clip.frames.length) play(0);
+  else { t0 = performance.now(); playing = true; $('pause').textContent = '⏸ pause'; tick(); }
+}
+async function vote(v) {
+  const e = effects[index];
+  const r = await fetch('/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ effect: e.effect, vote: v }) });
+  if (!r.ok) { alert('vote not saved'); return; }
+  e.vote = v; renderList(); updateVoteButtons();
+  if (v) { const next = effects.findIndex((x, i) => i > index && !x.vote); select(next >= 0 ? next : index + 1); }
+}
+function updateVoteButtons() { const v = effects[index]?.vote; $('yes').classList.toggle('active', v === 'y'); $('no').classList.toggle('active', v === 'n'); }
+$('prev').onclick = () => select(index - 1); $('next').onclick = () => select(index + 1);
+$('replay').onclick = () => play(0); $('pause').onclick = togglePause;
+$('yes').onclick = () => vote('y'); $('no').onclick = () => vote('n'); $('clear').onclick = () => vote(null);
+$('speed').onchange = () => { if (playing) { elapsed += 0; t0 = performance.now(); } };
+document.addEventListener('keydown', ev => {
+  if (ev.target.tagName === 'SELECT') return; const k = ev.key;
+  if (k === 'y') vote('y'); else if (k === 'n') vote('n'); else if (k === 'u') vote(null);
+  else if (k === 'j' || k === 'ArrowRight') select(index + 1); else if (k === 'k' || k === 'ArrowLeft') select(index - 1);
+  else if (k === ' ') { ev.preventDefault(); togglePause(); } else if (k === 'r') play(0); else return;
+});
+layout(); loadList().then(() => { const first = effects.findIndex(e => !e.vote); select(first >= 0 ? first : 0); });
+</script>
+</body>
+</html>

@@ -50,6 +50,12 @@ The default [Giants collection](examples/giants/README.md) contains braille conv
 
 The [refined Giants collection](examples/giants-refined/README.md) offers larger portraits with shaded facial detail and per-image contrast adjustment. Preview it with `python3 scripts/preview.py examples/giants-refined`. Its original artwork notices still apply.
 
+The [native fullscreen Giants collection](examples/giants-fullscreen/README.md) pairs 124-column shaded busts with readable terminal-text names and an enlarged wordmark. It fits the stock size-18 Foot screensaver at a minimum 126×32 cells.
+
+The [colour Giants collection](examples/giants-color/README.md) converts the same 18 wallpapers to truecolour quadrant block text: each cell carries two 24-bit colours and one of 15 block glyphs, so the stock 137×36 grid shows a 274×72 colour picture with the painted names legible. It is the current local selection. Colour files contain SGR sequences, so validate them with `python3 scripts/validate.py --color examples/giants-color` and play them with `ttfx --existing-color-handling dynamic`; the stock renderer strips colour. `scripts/omarchy-screensaver-color` and `scripts/omarchy-screensaver-prepare-color` are the renderer and preparer variants that do this. Convert your own images with `python3 scripts/convert-color.py image.jpg out.txt`.
+
+The colour renderer plays a voted subset of the `ttfx` effects. Watch every effect on your own artwork and vote yes or no in a local browser page with the [curation tool](curation/README.md); `python3 curation/curate.py apply` writes the yes list into the renderer. The current list came from the vote record in `curation/votes/`.
+
 The [Van Gogh collection](examples/van-gogh/README.md) adds eight public-domain Met paintings converted to captioned braille. Preview it with `python3 scripts/preview.py examples/van-gogh`. Museum credits, pinned source hashes, and offline regeneration instructions are included.
 
 The [Glyphwork collection](examples/glyphwork/README.md) contains six MIT-licensed procedural ASCII patterns with a preserved upstream license and per-piece source credits. Preview it with `python3 scripts/preview.py examples/glyphwork`.
@@ -60,7 +66,7 @@ The original [Cosmos collection](examples/cosmos/README.md) contains five full-s
 
 ## Make a collection
 
-Put local artwork in `collections/<name>/` (ignored by Git). Each `.txt` is one frame of artwork. ASCII, braille, and block characters are supported; ANSI control sequences are not.
+Put local artwork in `collections/<name>/` (ignored by Git). Each `.txt` is one frame of artwork. ASCII, braille, and block characters are supported. Cursor movement and other terminal controls are rejected; SGR colour sequences are accepted only by the colour preparer (`scripts/validate.py --color`).
 
 ```bash
 mkdir -p collections/my-art
@@ -70,6 +76,16 @@ python3 scripts/preview.py collections/my-art
 ```
 
 The converter is an existing Omarchy command. Its availability and visual quality depend on the installed version and source image. Inspect results before using them. Converted images retain their source licensing obligations; this project's MIT license does not license third-party artwork.
+
+## Credits
+
+This project stands on work by DHH and the Omarchy team, and it should be read that way:
+
+- [Omarchy](https://omarchy.org/) itself: the desktop, the idle service, the screensaver launcher, and the `omarchy transcode ascii` converter. The colour renderer and preparer here are small edits of the Omarchy screensaver scripts and keep their MIT notice.
+- [ttfx](https://github.com/omacom-io/ttfx), the Omarchy team's Rust port of TerminalTextEffects. Every animation in this project is theirs; this project only chooses which ones play and passes colour through.
+- The [Giants wallpaper series](https://github.com/dhh/omarchy-giants-theme) by DHH. Every Giants collection here is a conversion of that artwork, with its notices and credits carried alongside. The artwork is not covered by this project's license.
+
+The upstream draft that this workshop feeds is [Omarchy PR #11626](https://github.com/omacom/omarchy/pull/11626).
 
 ## Continue development
 
