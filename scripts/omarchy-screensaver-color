@@ -91,8 +91,13 @@ if ((${#include_effects[@]})); then
 fi
 
 while true; do
+  # Colour artwork settles on its own colours; plain text keeps the effect gradient.
+  color_handling=ignore
+  if grep -q -F $'\e[' -- "${artworks[artwork_index]}"; then
+    color_handling=dynamic
+  fi
   ttfx -i "${artworks[artwork_index]}" \
-    --existing-color-handling dynamic \
+    --existing-color-handling "$color_handling" \
     --frame-rate 120 --canvas-width 0 --canvas-height 0 --reuse-canvas --anchor-canvas c --anchor-text c\
     --random-effect "${effect_filter[@]}" --no-eol --no-restore-cursor &
 
@@ -104,7 +109,9 @@ while true; do
     fi
   done
   if ! wait "$effect_pid"; then
-    # A broken effect must neither busy-loop nor close the idle window.
+    # A broken effect must neither busy-loop nor close the idle window. An
+    # effect list ttfx rejected is dropped so the next attempt can succeed.
+    effect_filter=()
     read -n1 -t 1 && exit_screensaver
   fi
   effect_pid=""

@@ -66,11 +66,16 @@ class ColorTests(unittest.TestCase):
         (self.root / '03-cursor.txt').write_text('\x1b[2J\x1b[31mred\x1b[0m\n')
         (self.root / '04-plain.txt').write_text('  plain art\n  still fine\n')
         (self.root / '05-huge.txt').write_bytes(b'\x1b[31m' + b'#' * (1048576) + b'\n')
+        (self.root / '06-long-params.txt').write_text('\x1b[' + '1;' * 30 + 'mX\n')
+        (self.root / '07-full-pair.txt').write_text('\x1b[38;2;255;255;255;48;2;255;255;255m█\x1b[0m\n')
+        (self.root / '08-bad-arity.txt').write_text('\x1b[38;7;1mX\n')
+        (self.root / '09-overflow.txt').write_text('\x1b[99999999999999999999mX\n')
         with prepare(self.root, COLOR_PREPARER) as files:
             kept = [f.read_bytes() for f in files]
-        self.assertEqual(len(kept), 2)
+        self.assertEqual(len(kept), 3)
         self.assertEqual(kept[0], (self.root / '01-ok.txt').read_bytes())
         self.assertEqual(kept[1], (self.root / '04-plain.txt').read_bytes())
+        self.assertEqual(kept[2], (self.root / '07-full-pair.txt').read_bytes())
 
     def test_pinned_preparer_still_rejects_colour(self):
         convert(self.image, self.root / '01-ok.txt', '--cols', '60', '--rows', '20')

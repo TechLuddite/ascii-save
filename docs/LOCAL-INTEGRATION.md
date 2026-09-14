@@ -7,17 +7,16 @@ with two of its files replaced by colour-aware versions from this repository:
 
 | Trial file | Now a copy of | Change |
 | --- | --- | --- |
-| `source/bin/omarchy-screensaver` | `scripts/omarchy-screensaver-color` | `ttfx --existing-color-handling dynamic`; random selection limited to the voted `include_effects` list; stock timing |
-| `source/bin/omarchy-screensaver-prepare` | `scripts/omarchy-screensaver-prepare-color` | SGR colour passes validation; all other controls still rejected; 1 MiB limit |
+| `source/bin/omarchy-screensaver` | PR #11626 at `667b14c` | colour handling per artwork; `screensaver.effects` from shell.json (set to the 21 voted effects); stock timing |
+| `source/bin/omarchy-screensaver-prepare` | PR #11626 at `667b14c` | SGR colour with a strict parameter grammar; all other controls rejected; 1 MiB limit |
+| `source/bin/omarchy-screensaver-import` | PR #11626 at `667b14c` | colour import by default, `--mode braille|block` optional |
 
 `~/.config/omarchy/shell.json` `screensaver.source` is
 `~/.local/share/omarchy/screensavers/giants-color`, a copy of
 `examples/giants-color`. The trial's `installed.json` records the new hashes,
 the new source, and the previous source
 (`.../screensavers/giants-fullscreen-ascii`) under `color_trial`, so
-`uninstall.py` still recognises and removes its files. The replaced originals
-and the prior `shell.json` are under
-`~/.local/state/omarchy/screensaver-development/color-trial-backup-<stamp>/`.
+`uninstall.py` still recognises and removes its files. The replaced originals and the prior `shell.json` are under `~/.local/state/omarchy/screensaver-development/color-trial-backup-<stamp>/` (first colour trial) and `pr-scripts-backup-<stamp>/` (the ascii-save variants replaced by the PR scripts on 2026-09-14).
 
 To go back to the monochrome trial without uninstalling: copy the two backed-up
 files over `source/bin/`, restore their hashes in `installed.json` from the
