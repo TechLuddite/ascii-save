@@ -64,6 +64,10 @@ The original [Cosmos collection](examples/cosmos/README.md) contains five full-s
 
 `examples/observatory` is a small original MIT-licensed collection for simple tests. Pass its path to either command to use it.
 
+## Make a demo video
+
+`video/opener.py` renders the colour opener (accelerating slides, shrink to a grid, blackhole into the stock logo) and `video/showcase.py` renders the opener followed by one curated effect per artwork, time-compressed to a target length. Both run entirely offscreen and need a virtualenv with `video/requirements.txt` (Pillow, numpy, TerminalTextEffects 0.15.0). See [video/README.md](video/README.md).
+
 ## Make a collection
 
 Put local artwork in `collections/<name>/` (ignored by Git). Each `.txt` is one frame of artwork. ASCII, braille, and block characters are supported. Cursor movement and other terminal controls are rejected; SGR colour sequences are accepted only by the colour preparer (`scripts/validate.py --color`).
@@ -77,15 +81,33 @@ python3 scripts/preview.py collections/my-art
 
 The converter is an existing Omarchy command. Its availability and visual quality depend on the installed version and source image. Inspect results before using them. Converted images retain their source licensing obligations; this project's MIT license does not license third-party artwork.
 
-## Credits
+## Credits and thanks
 
-This project stands on work by DHH and the Omarchy team, and it should be read that way:
+This project is a workshop built on other people's work. Loudly, and with links:
 
-- [Omarchy](https://omarchy.org/) itself: the desktop, the idle service, the screensaver launcher, and the `omarchy transcode ascii` converter. The colour renderer and preparer here are small edits of the Omarchy screensaver scripts and keep their MIT notice.
-- [ttfx](https://github.com/omacom-io/ttfx), the Omarchy team's Rust port of TerminalTextEffects. Every animation in this project is theirs; this project only chooses which ones play and passes colour through.
-- The [Giants wallpaper series](https://github.com/dhh/omarchy-giants-theme) by DHH. Every Giants collection here is a conversion of that artwork, with its notices and credits carried alongside. The artwork is not covered by this project's license.
+**Omarchy, by DHH and the Omarchy team.** [Omarchy](https://omarchy.org/) is the desktop this all runs in: the idle service, the screensaver launcher, the terminal configs, and the `omarchy transcode ascii` converter. The colour renderer and preparer here are small edits of the Omarchy screensaver scripts and keep their MIT notice. Thank you for a screensaver worth obsessing over, and for shipping it as plain shell scripts anyone can read.
 
-The upstream draft that this workshop feeds is [Omarchy PR #11626](https://github.com/omacom/omarchy/pull/11626).
+**ttfx, by the Omarchy team.** [ttfx](https://github.com/omacom-io/ttfx) (MIT) is the single-binary Rust port of TerminalTextEffects that every Omarchy screensaver runs. Every animation in this project is theirs. This project only chooses which ones play, passes colour through, and records them.
+
+**TerminalTextEffects, by ChrisBuilds.** [TerminalTextEffects](https://github.com/ChrisBuilds/terminaltexteffects) (MIT) is the original Python effects engine and the source of every effect `ttfx` ports. The video opener uses its Blackhole effect directly, with a small subclass in `video/blackhole.py`. Documentation is at [chrisbuilds.github.io/terminaltexteffects](https://chrisbuilds.github.io/terminaltexteffects/).
+
+**The Giants wallpaper series, by DHH.** [omarchy-giants-theme](https://github.com/dhh/omarchy-giants-theme) is the artwork in every Giants collection here. Its credits for each portrait's identity reference are carried alongside every conversion in `SOURCE-CREDITS.md`. The artwork is not covered by this project's license; see each collection's `ARTWORK-NOTICE.md`.
+
+**The Metropolitan Museum of Art.** The Van Gogh collection converts eight paintings released under the Met's [Open Access](https://www.metmuseum.org/hubs/open-access) program (CC0). Museum credit lines are in `examples/van-gogh/SOURCE-CREDITS.md`.
+
+**muraleph.** The Glyphwork collection reproduces six procedural pieces from [muraleph/glyphwork](https://github.com/muraleph/glyphwork) (MIT), with the upstream license preserved in `examples/glyphwork/LICENSE`.
+
+**Foot, by Daniel Eklöf and contributors.** [Foot](https://codeberg.org/dnkl/foot) (MIT) is the terminal the screensaver was measured and previewed in. Its exact block-element rendering is what the offscreen video renderer imitates.
+
+**JetBrains Mono and Nerd Fonts.** The measured grids and the video renderer use [JetBrains Mono](https://www.jetbrains.com/lp/mono/) as patched by [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts) (SIL OFL 1.1).
+
+**Hyprland.** [Hyprland](https://github.com/hyprwm/Hyprland) (BSD-3-Clause) is the compositor Omarchy runs on; the local integration talks to it through `hyprctl`.
+
+**ImageMagick, ffmpeg, Pillow and numpy.** [ImageMagick](https://www.imagemagick.org/) decodes and resamples every image the converters touch. [ffmpeg](https://ffmpeg.org) assembles the videos. [Pillow](https://python-pillow.org/) and [numpy](https://numpy.org/) paint the offscreen frames.
+
+The upstream draft this workshop feeds is [Omarchy PR #11626](https://github.com/omacom/omarchy/pull/11626). Nothing in this repository changes that draft.
+
+If your work is used here and is not credited the way you would like, open an issue and it will be fixed.
 
 ## Continue development
 
