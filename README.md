@@ -66,6 +66,8 @@ The original [Cosmos collection](examples/cosmos/README.md) contains five full-s
 
 ## Make a demo video
 
+Two finished videos are tracked in the repository: [artifacts/giants-opener-color.mp4](artifacts/giants-opener-color.mp4) (the 29 s opener) and [artifacts/giants-showcase-color.mp4](artifacts/giants-showcase-color.mp4) (the opener plus one curated effect per portrait, 117 s). They are conversions of the Giants artwork and carry its notices; see the credits below. No other recordings are tracked.
+
 `video/opener.py` renders the colour opener (accelerating slides, shrink to a grid, blackhole into the stock logo) and `video/showcase.py` renders the opener followed by one curated effect per artwork, time-compressed to a target length. Both run entirely offscreen and need a virtualenv with `video/requirements.txt` (Pillow, numpy, TerminalTextEffects 0.15.0). See [video/README.md](video/README.md).
 
 ## Make a collection
