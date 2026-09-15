@@ -1,6 +1,6 @@
 # Local artwork, machine notes and visual evidence are never published by default.
 .local/
-artifacts/
+artifacts/*
 collections/
 __pycache__/
 *.py[cod]
@@ -20,3 +20,6 @@ __pycache__/
 *.jpg
 *.jpeg
 *.webp
+# The two published demo videos are the only recordings tracked in git.
+!artifacts/giants-opener-color.mp4
+!artifacts/giants-showcase-color.mp4
