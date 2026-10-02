@@ -58,6 +58,8 @@ The colour renderer plays a voted subset of the `ttfx` effects. Watch every effe
 
 The [Van Gogh collection](examples/van-gogh/README.md) adds eight public-domain Met paintings converted to captioned braille. Preview it with `python3 scripts/preview.py examples/van-gogh`. Museum credits, pinned source hashes, and offline regeneration instructions are included.
 
+The [ukiyo-e collection](examples/ukiyo-e/README.md) converts 32 Hokusai and Hiroshige woodblock prints from the Art Institute of Chicago's CC0 open-access collection to captioned truecolour block text. Validate it with `python3 scripts/validate.py --color examples/ukiyo-e`. Museum credits, source hashes and per-print conversion settings are included.
+
 The [Glyphwork collection](examples/glyphwork/README.md) contains six MIT-licensed procedural ASCII patterns with a preserved upstream license and per-piece source credits. Preview it with `python3 scripts/preview.py examples/glyphwork`.
 
 The original [Cosmos collection](examples/cosmos/README.md) contains five full-screen natural-space braille compositions: an eclipse, spiral galaxy, ringed giant, nebula pillars, and a cratered crescent. It is MIT-licensed and generated directly from the included Python source.
@@ -96,6 +98,8 @@ This project is a workshop built on other people's work. Loudly, and with links:
 **The Giants wallpaper series, by DHH.** [omarchy-giants-theme](https://github.com/dhh/omarchy-giants-theme) is the artwork in every Giants collection here. Its credits for each portrait's identity reference are carried alongside every conversion in `SOURCE-CREDITS.md`. The artwork is not covered by this project's license; see each collection's `ARTWORK-NOTICE.md`.
 
 **The Metropolitan Museum of Art.** The Van Gogh collection converts eight paintings released under the Met's [Open Access](https://www.metmuseum.org/hubs/open-access) program (CC0). Museum credit lines are in `examples/van-gogh/SOURCE-CREDITS.md`.
+
+**The Art Institute of Chicago.** The ukiyo-e collection converts 32 prints by Katsushika Hokusai and Utagawa Hiroshige released under the museum's [open access](https://www.artic.edu/open-access/open-access-images) program (CC0). Credit lines in the museum's requested form are in `examples/ukiyo-e/SOURCE-CREDITS.md`.
 
 **muraleph.** The Glyphwork collection reproduces six procedural pieces from [muraleph/glyphwork](https://github.com/muraleph/glyphwork) (MIT), with the upstream license preserved in `examples/glyphwork/LICENSE`.
 
