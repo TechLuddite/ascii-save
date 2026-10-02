@@ -1,5 +1,67 @@
 # Handoff
 
+## Greptile review fixes, 2026-10-02 (pushed as `7b72ba6`)
+
+At 07:39 UTC on 2026-10-02 the Greptile bot reviewed `5e28e86`, rated it 4/5 and raised three findings. All three were confirmed by code reading. The user authorized fixing them with tests, the adversarial review, and a draft reply, then approved the push and the comment after seeing the draft. Commit `7b72ba6a1d0ab1df12c7d20720869a4ebbe8d564` is the verified PR head. The reply is https://github.com/omacom/omarchy/pull/11626#issuecomment-5948650782. Greptile resolved its three inline threads itself after the push. With the user's approval, the PR description's full-suite line now cites `7b72ba6`, where the result was unchanged.
+
+1. G1 (P1): an image that vanished, became unreadable, or was replaced between the folder scan and the open was skipped, so a partial collection could be selected. Since the scan already drops links and special files, the importer now fails. A missing or replaced file reports "changed during import", and any other open error reports "cannot read 'name' (reason)". The previous selection is kept in both cases.
+2. G2 (P2): a conversion timeout named the temporary snapshot path. It now names the image. When the 120 s batch budget is what ran out, it reports "import exceeds batch resource limit" instead.
+3. G3 (P2): the live acceptance test only checked the `dynamic` flag. The colour artwork is now solid blocks in `rgb(13,247,61)`. The test polls screenshots until at least 2000 pixels within 3% of that colour appear while a single colour effect process runs for the whole capture.
+
+An independent adversarial review agent found no blockers, two should-fix items and four nits, all applied:
+- GR1: the first version of G1 reported unreadable files as "changed".
+- GR2: a nearly spent batch budget was blamed on the current image.
+- GR3: dead code.
+- GR4: the FIFO and folder replacement branch had no test.
+- GR5: the poll loop spun at full CPU during plain effects.
+- GR6: the capture could span two `ttfx` runs. It now requires the same PID before and after.
+
+The reviewer measured that colorshift, middleout, binarypath and waves show the settled colour for 0.27 s or less, so a flaky colour check is possible but unlikely within 120 s. The fallback is a short `--include-effects` list in the test collection. That review agent re-sent its final report several times, and messages the user typed to it did not reach the main session.
+
+Validation on 2026-10-02:
+- The branding test covers removal, symlink, FIFO and folder replacement mid-import, an unreadable file, and the per-image timeout. The removal case failed on `5e28e86`.
+- The batch-deadline message was checked in a sandbox copy with a 20 s budget.
+- The live acceptance test passed 14 of 14. The colour check was shown to fail with a wrong target colour.
+- The full upstream shell suite had 4 of 238 files failing (`config`, `locate`, `snapper`, `unowned-system-paths`), the same baseline as before, and both screensaver files pass.
+- No live run of the stock launcher across several monitors and no idle-to-lock cycle.
+
+## Community review fixes, 2026-10-01 to 2026-10-02 (pushed as `5e28e86`)
+
+An automated community review from an account unaffiliated with Omarchy was posted on PR #11626 at 03:01 UTC on 2026-10-01 against `1f20066`. There was no maintainer review. The user authorized fixing every finding with tests, then approved the push and the comment after seeing the draft comment. Commit `5e28e86281070a29d6d9d732e54300734a6cfd4a` is on the fork branch, and the PR head was verified at that commit on 2026-10-02. The response comment, with an AI process section modelled on the reviewer's, is https://github.com/omacom/omarchy/pull/11626#issuecomment-5947447936. On 2026-10-02 the user also approved a description update. The live-testing line now cites the acceptance test on one display, with multi-monitor launch and idle-to-lock still unverified, and the full-suite line cites the four baseline failures at `5e28e86`. The Substrata record is `project.omarchy` `ascii-collections/pr-11626-community-review-2026-10`.
+
+Community findings, all confirmed (F1 and F4 by running the reproducers, F2 live and in code, F3 in code):
+
+1. F1: import rejected an 8-frame animated WebP (policy `list-length` 8, WebP decodes every frame) and a 48 MP JPEG (cache exhausted). The notification named no file.
+2. F2: `screensaver_in_focus` treated `{}` (no focused window) as still focused, so moving to an empty workspace never dismissed. This was a regression from merge-base `31bd80d`.
+3. F3: Edit Text, Set From Image and Restore Default always rewrote `shell.json` and failed on an unparseable config after replacing `screensaver.txt`.
+4. F4: symlinks and folders with image names counted against the 128-image cap.
+
+Fixes: `list-length` 129. The converter bounds large inputs in every mode with `-define jpeg:size=2048x2048` and `-sample 2048x2048>` before trim, and keeps only the first frame in braille and block too. The importer names the failing file, and the branding action shows that reason in the notification, escaped because notification bodies render markup, with a separate message for a timeout. The focus check returns "focused" only when `hyprctl` fails or the reply is not a JSON object. `clear_source` writes `shell.json` only when `.screensaver.source` is set. The scan counts only regular files. The manual now lists PNG, JPEG, WebP and SVG, documents `--mode color`, the frame and size limits, and that the CLI import does not select its folder.
+
+An independent adversarial review agent (52 tool calls) then reviewed these fixes and found:
+
+1. RV1, should-fix: the first version shrank to 4x the output size before trim, which destroyed small logos on large canvases (an 8000x6000 text logo failed with "No logo pixels found"). It was replaced by the fixed 2048 box with point sampling. `logo.svg` and all 18 `applications/icons` PNGs now convert byte-identically to `1f20066` in all three modes.
+2. RV2, should-fix: the manual's "about 75 megapixels" was wrong. RGB PNG fails above about 60 MP and palette PNG with alpha at about 30 MP. The manual now says roughly 20 to 60 megapixels depending on colour type.
+3. RV3: `list-length` 128 allowed only 127 frames. Now 129, tested with 128 frames.
+4. RV4: notification markup from filenames. Now escaped and tested.
+5. RV5: successful imports discarded progress output. Now printed on success too.
+6. RV6: the `{}` focus test accepted any exit. It now requires exit status 0.
+7. Not fixed, for the PR description: during a multi-monitor launch, the stock launcher's focus walk can reach an empty workspace and an earlier renderer may dismiss itself. The merge-base behaved the same. Not tested live.
+
+New live test: `test/acceptance.d/screensaver-test.sh` (upstream acceptance suite). It launches `$OMARCHY_PATH/bin/omarchy-screensaver` in the default terminal with a throwaway `HOME` and `TMPDIR`, checks focus and fullscreen, collection advance from `ignore` to `dynamic` colour handling, dismissal on an empty workspace and by a key (sent only after confirming focus), effect shutdown and playback-copy removal. It never passes the window class on a command line. It bypasses the stock launcher because this workstation's Hyprland PATH resolves the launcher to the 667b14c trial copy.
+
+Validation on 2026-10-02: both PR test files pass, and each new check failed on the unfixed scripts. The full upstream suite has 4 of 238 files failing (`config`, `locate`, `snapper`, `unowned-system-paths`), all within the documented clean-base failures. The live acceptance test passed 13 of 13 on eDP-1 against the working tree, and against the `1f20066` renderer it failed at the empty-workspace dismissal. Screenshots are local only in `.local/live-20261002/`. Not verified: the stock launcher path, a second monitor, idle-to-lock. The installed Giants trial was not touched.
+
+## Upstream readiness review — 2026-09-18
+
+The user authorized updating Omarchy PR #11626 and taking it out of draft, with colour support retained and configurable effect selection removed. The pushed and remotely verified head is `1f200663da08a1d961a148b99e257e78635a46c4` in `~/Projects/omarchy-ascii-collections`. It retains collection selection, one-time native image-folder import, colour conversion/playback, branding reset behavior, symlink-safe configuration writes and scoped renderer cleanup. The PR no longer reads `screensaver.effects` or filters the native random rotation. It is open and ready for review (`isDraft: false`); the description now reflects the final scope and test limitations. No upstream CI checks were listed at verification.
+
+Review findings and fixes before push: (1) 128 valid 999,040-byte colour artworks exceeded the five-second preparation deadline (89 completed); validating the same bounded SGR grammar in the regex engine removes the per-sequence Python parsing cost. The regression exercises 128 large artworks with varying cell colours under the actual five-second limit. (2) one-sample-wide/high fitted rasters were rounded down to zero cells, producing blank output or conversion failure; incomplete cells now repeat edge samples. Thin and odd-sized image regressions pass. The final adversarial pass checked SGR bounds, malformed sequences, cell bounds and removed effect-selection paths; 100,000 seeded comparisons matched the previous SGR grammar. This was a local review, not a new independent-agent review.
+
+Validation: upstream collection and branding regressions, CLI, menu guards, Bash syntax and diff checks passed; a sandboxed real colour import including 1000×1 and 1×1000 PNGs and a JPEG passed. Workshop unittest discovery passed 27 tests with 2 optional-dependency skips; pinned reference collection regressions passed. Full upstream suite was not rerun; its historical baseline failures remain documented. No live test of this exact candidate or automatic idle-to-lock cycle was performed. No visual evidence was published.
+
+The installed Giants trial and this workshop's colour scripts remain at their prior behavior, including the user's voted effects; this upstream update does not install anything. Do not copy the new upstream renderer over the trial as a routine repair. The two colour fixes are also saved privately in `.local/review-20260918/colour-fixes.patch` for a later authorized local update.
+
 ## Current handoff — 2026-09-14: colour collection trial
 
 The user judged every monochrome conversion (braille, shaded ASCII busts) as
