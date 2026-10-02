@@ -99,5 +99,21 @@ class ColorTests(unittest.TestCase):
             self.assertEqual(len(files), 18)
 
 
+    def test_ukiyo_e_manifest_matches_files_and_plays(self):
+        source = ROOT / 'examples/ukiyo-e'
+        manifest = json.loads((source / 'manifest.json').read_text())
+        self.assertEqual(len(manifest['works']), 32)
+        self.assertEqual({p.name for p in source.glob('*.txt')}, {w['file'] for w in manifest['works']})
+        for work in manifest['works']:
+            self.assertEqual((work['museum'], work['licence']), ('Art Institute of Chicago', 'CC0'))
+            data = (source / work['file']).read_bytes()
+            self.assertEqual(hashlib.sha256(data).hexdigest(), work['output_sha256'])
+            visible = SGR.sub('', data.decode())
+            self.assertLessEqual(max(len(l) for l in visible.splitlines()), 137)
+            self.assertLessEqual(len(visible.splitlines()), 36)
+        with prepare(source, COLOR_PREPARER) as files:
+            self.assertEqual(len(files), 32)
+
+
 if __name__ == '__main__':
     unittest.main()
