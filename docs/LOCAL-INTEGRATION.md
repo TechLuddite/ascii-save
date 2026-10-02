@@ -1,5 +1,7 @@
 # Local integration and ownership
 
+Upstream scope update (2026-09-18): PR #11626 candidate `1f20066` retains colour but removes configurable effect selection and fixes two colour preparation/conversion defects. The installed trial described below was **not updated** and still uses its 21 voted effects. Its files and the workshop colour scripts no longer mirror the latest upstream candidate. See `CONTEXT.md` for review findings and verification.
+
 ## Active setup: colour Giants on the revised native draft (2026-09-14)
 
 The trial copy described in the next section is still the active mechanism,
