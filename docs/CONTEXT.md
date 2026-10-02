@@ -1,5 +1,30 @@
 # Handoff
 
+## Greptile review fixes, 2026-10-02 (pushed as `7b72ba6`)
+
+At 07:39 UTC on 2026-10-02 the Greptile bot reviewed `5e28e86`, rated it 4/5 and raised three findings. All three were confirmed by code reading. The user authorized fixing them with tests, the adversarial review, and a draft reply, then approved the push and the comment after seeing the draft. Commit `7b72ba6a1d0ab1df12c7d20720869a4ebbe8d564` is the verified PR head. The reply is https://github.com/omacom/omarchy/pull/11626#issuecomment-5948650782. Greptile resolved its three inline threads itself after the push. With the user's approval, the PR description's full-suite line now cites `7b72ba6`, where the result was unchanged.
+
+1. G1 (P1): an image that vanished, became unreadable, or was replaced between the folder scan and the open was skipped, so a partial collection could be selected. Since the scan already drops links and special files, the importer now fails. A missing or replaced file reports "changed during import", and any other open error reports "cannot read 'name' (reason)". The previous selection is kept in both cases.
+2. G2 (P2): a conversion timeout named the temporary snapshot path. It now names the image. When the 120 s batch budget is what ran out, it reports "import exceeds batch resource limit" instead.
+3. G3 (P2): the live acceptance test only checked the `dynamic` flag. The colour artwork is now solid blocks in `rgb(13,247,61)`. The test polls screenshots until at least 2000 pixels within 3% of that colour appear while a single colour effect process runs for the whole capture.
+
+An independent adversarial review agent found no blockers, two should-fix items and four nits, all applied:
+- GR1: the first version of G1 reported unreadable files as "changed".
+- GR2: a nearly spent batch budget was blamed on the current image.
+- GR3: dead code.
+- GR4: the FIFO and folder replacement branch had no test.
+- GR5: the poll loop spun at full CPU during plain effects.
+- GR6: the capture could span two `ttfx` runs. It now requires the same PID before and after.
+
+The reviewer measured that colorshift, middleout, binarypath and waves show the settled colour for 0.27 s or less, so a flaky colour check is possible but unlikely within 120 s. The fallback is a short `--include-effects` list in the test collection. That review agent re-sent its final report several times, and messages the user typed to it did not reach the main session.
+
+Validation on 2026-10-02:
+- The branding test covers removal, symlink, FIFO and folder replacement mid-import, an unreadable file, and the per-image timeout. The removal case failed on `5e28e86`.
+- The batch-deadline message was checked in a sandbox copy with a 20 s budget.
+- The live acceptance test passed 14 of 14. The colour check was shown to fail with a wrong target colour.
+- The full upstream shell suite had 4 of 238 files failing (`config`, `locate`, `snapper`, `unowned-system-paths`), the same baseline as before, and both screensaver files pass.
+- No live run of the stock launcher across several monitors and no idle-to-lock cycle.
+
 ## Community review fixes, 2026-10-01 to 2026-10-02 (pushed as `5e28e86`)
 
 An automated community review from an account unaffiliated with Omarchy was posted on PR #11626 at 03:01 UTC on 2026-10-01 against `1f20066`. There was no maintainer review. The user authorized fixing every finding with tests, then approved the push and the comment after seeing the draft comment. Commit `5e28e86281070a29d6d9d732e54300734a6cfd4a` is on the fork branch, and the PR head was verified at that commit on 2026-10-02. The response comment, with an AI process section modelled on the reviewer's, is https://github.com/omacom/omarchy/pull/11626#issuecomment-5947447936. On 2026-10-02 the user also approved a description update. The live-testing line now cites the acceptance test on one display, with multi-monitor launch and idle-to-lock still unverified, and the full-suite line cites the four baseline failures at `5e28e86`. The Substrata record is `project.omarchy` `ascii-collections/pr-11626-community-review-2026-10`.
