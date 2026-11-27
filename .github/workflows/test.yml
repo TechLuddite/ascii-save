@@ -5,7 +5,12 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # tests/test_color.py calls ImageMagick 7 as `magick`. The Ubuntu runner
+    # image ships ImageMagick 6, which has no such command, so the job runs in
+    # Arch, the distribution Omarchy is built on.
+    container: archlinux@sha256:375a401bb3c6376b37f40b6dfa25067db37ec78d0b7af67ae6315f43a0184a9d # latest, 2026-11-26
     steps:
+      - run: pacman -Syu --noconfirm --needed git imagemagick jq python
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
